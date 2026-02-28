@@ -1,7 +1,7 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
 import {
   Alert,
   Dimensions,
@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Photo, usePhotosContext } from '@/context/photos-context';
+import { usePhotosContext } from '@/context/photos-context';
 import { useAppColorScheme } from '@/hooks/use-app-color-scheme';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -21,7 +21,7 @@ const PHOTO_SIZE = (SCREEN_WIDTH - 48) / 2;
 
 export default function CategoryScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { getCategoryById, getPhotosByCategory, addPhoto, deletePhoto } = usePhotosContext();
+  const { getCategoryById, getPhotosByCategory, addPhoto } = usePhotosContext();
   const colorScheme = useAppColorScheme();
   const isDark = colorScheme === 'dark';
 
@@ -62,17 +62,6 @@ export default function CategoryScreen() {
         },
       },
       { text: 'Cancel', style: 'cancel' },
-    ]);
-  }
-
-  function handleLongPress(photo: Photo) {
-    Alert.alert('Delete Photo', 'Remove this photo from your progress?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () => deletePhoto(photo.id),
-      },
     ]);
   }
 
@@ -123,7 +112,7 @@ export default function CategoryScreen() {
           contentContainerStyle={styles.grid}
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
-            <Pressable style={styles.photoItem} onLongPress={() => handleLongPress(item)}>
+            <Pressable style={styles.photoItem} onPress={() => router.push(`/photo/${item.id}`)}>
               <Image source={{ uri: item.uri }} style={styles.photo} contentFit="cover" />
               <Text style={[styles.photoDate, { color: colors.photoDate }]}>
                 {formatDate(item.takenAt)}

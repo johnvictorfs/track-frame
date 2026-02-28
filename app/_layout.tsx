@@ -19,6 +19,7 @@ function RootLayoutInner() {
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="category/[id]" options={{ headerShown: true }} />
+          <Stack.Screen name="photo/[id]" options={{ headerShown: true }} />
         </Stack>
         <StatusBar style={effectiveColorScheme === 'dark' ? 'light' : 'dark'} />
       </PhotosProvider>
