@@ -13,16 +13,16 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  useColorScheme,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { usePhotosContext } from '@/context/photos-context';
+import { useAppColorScheme } from '@/hooks/use-app-color-scheme';
 
 export default function AddScreen() {
   const { categories, addCategory, addPhoto } = usePhotosContext();
-  const colorScheme = useColorScheme();
+  const colorScheme = useAppColorScheme();
   const isDark = colorScheme === 'dark';
 
   const [selectedUri, setSelectedUri] = useState<string | null>(null);

@@ -20,6 +20,7 @@ const MAPPING = {
   'chevron.right': 'chevron-right',
   'photo.on.rectangle.angled': 'photo-library',
   'plus.circle.fill': 'add-circle',
+  'gearshape.fill': 'settings',
 } as IconMapping;
 
 /**

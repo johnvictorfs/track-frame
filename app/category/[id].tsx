@@ -9,12 +9,12 @@ import {
   Pressable,
   StyleSheet,
   Text,
-  useColorScheme,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Photo, usePhotosContext } from '@/context/photos-context';
+import { useAppColorScheme } from '@/hooks/use-app-color-scheme';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const PHOTO_SIZE = (SCREEN_WIDTH - 48) / 2;
@@ -22,7 +22,7 @@ const PHOTO_SIZE = (SCREEN_WIDTH - 48) / 2;
 export default function CategoryScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { getCategoryById, getPhotosByCategory, addPhoto, deletePhoto } = usePhotosContext();
-  const colorScheme = useColorScheme();
+  const colorScheme = useAppColorScheme();
   const isDark = colorScheme === 'dark';
 
   const colors = {

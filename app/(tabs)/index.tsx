@@ -7,16 +7,16 @@ import {
   Pressable,
   StyleSheet,
   Text,
-  useColorScheme,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Category, usePhotosContext } from '@/context/photos-context';
+import { useAppColorScheme } from '@/hooks/use-app-color-scheme';
 
 export default function GalleryScreen() {
   const { categories, photos, loading, getLatestPhotoForCategory } = usePhotosContext();
-  const colorScheme = useColorScheme();
+  const colorScheme = useAppColorScheme();
   const isDark = colorScheme === 'dark';
 
   const colors = {

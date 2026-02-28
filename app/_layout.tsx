@@ -4,24 +4,32 @@ import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
 import { PhotosProvider } from '@/context/photos-context';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { SettingsProvider, useSettings } from '@/context/settings-context';
 
 export const unstable_settings = {
   anchor: '(tabs)',
 };
 
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
+function RootLayoutInner() {
+  const { effectiveColorScheme } = useSettings();
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+    <ThemeProvider value={effectiveColorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <PhotosProvider>
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="category/[id]" options={{ headerShown: true }} />
         </Stack>
-        <StatusBar style="auto" />
+        <StatusBar style={effectiveColorScheme === 'dark' ? 'light' : 'dark'} />
       </PhotosProvider>
     </ThemeProvider>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <SettingsProvider>
+      <RootLayoutInner />
+    </SettingsProvider>
   );
 }
