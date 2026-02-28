@@ -2,14 +2,9 @@ export type CategorySuggestion = { name: string; icon: string };
 
 export const CATEGORY_SUGGESTIONS: CategorySuggestion[] = [
   { name: 'Gym', icon: 'fitness-center' },
-  { name: 'Running', icon: 'directions-run' },
-  { name: 'Cycling', icon: 'directions-bike' },
-  { name: 'Swimming', icon: 'pool' },
   { name: 'Yoga', icon: 'self-improvement' },
   { name: 'Hair', icon: 'content-cut' },
   { name: 'Skin', icon: 'spa' },
-  { name: 'Diet', icon: 'restaurant' },
-  { name: 'Sleep', icon: 'bedtime' },
   { name: 'Mood', icon: 'mood' },
   { name: 'Pets', icon: 'pets' },
   { name: 'Plants', icon: 'local-florist' },
