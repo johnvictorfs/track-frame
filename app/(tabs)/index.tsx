@@ -3,6 +3,7 @@ import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   Pressable,
   StyleSheet,
@@ -16,7 +17,7 @@ import { useAppColorScheme } from '@/hooks/use-app-color-scheme';
 import Onboarding from '@/components/Onboarding';
 
 export default function GalleryScreen() {
-  const { categories, photos, loading, getLatestPhotoForCategory } = usePhotosContext();
+  const { categories, photos, loading, getLatestPhotoForCategory, deleteCategory } = usePhotosContext();
   const colorScheme = useAppColorScheme();
   const isDark = colorScheme === 'dark';
 
@@ -39,10 +40,22 @@ export default function GalleryScreen() {
         })
       : null;
 
+    function handleLongPress() {
+      Alert.alert(
+        'Delete Category',
+        `Delete "${item.name}" and all its photos? This cannot be undone.`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Delete', style: 'destructive', onPress: () => deleteCategory(item.id) },
+        ],
+      );
+    }
+
     return (
       <Pressable
         style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
         onPress={() => router.push(`/category/${item.id}`)}
+        onLongPress={handleLongPress}
       >
         <View style={[styles.colorBar, { backgroundColor: item.color }]} />
         {latestPhoto ? (

@@ -21,7 +21,7 @@ const PHOTO_SIZE = (SCREEN_WIDTH - 48) / 2;
 
 export default function CategoryScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { getCategoryById, getPhotosByCategory, addPhoto } = usePhotosContext();
+  const { getCategoryById, getPhotosByCategory, addPhoto, deleteCategory } = usePhotosContext();
   const colorScheme = useAppColorScheme();
   const isDark = colorScheme === 'dark';
 
@@ -34,6 +34,24 @@ export default function CategoryScreen() {
 
   const category = getCategoryById(id);
   const photos = getPhotosByCategory(id);
+
+  function handleDeleteCategory() {
+    Alert.alert(
+      'Delete Category',
+      `Delete "${category?.name}" and all its photos? This cannot be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            await deleteCategory(id);
+            router.back();
+          },
+        },
+      ],
+    );
+  }
 
   async function handleAddPhoto() {
     Alert.alert('Add Photo', 'Choose source', [
@@ -92,6 +110,11 @@ export default function CategoryScreen() {
           headerStyle: { backgroundColor: isDark ? '#1a1a1a' : '#fff' },
           headerTintColor: colors.text,
           headerShadowVisible: false,
+          headerRight: () => (
+            <Pressable onPress={handleDeleteCategory} hitSlop={12}>
+              <MaterialIcons name="delete-outline" size={24} color="#e53935" />
+            </Pressable>
+          ),
         }}
       />
 
