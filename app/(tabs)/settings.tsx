@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemePreference, useSettings } from '@/context/settings-context';
-import { useAppColorScheme } from '@/hooks/use-app-color-scheme';
+import { useTheme } from '@/hooks/use-theme';
 
 type ThemeOption = { value: ThemePreference; label: string; icon: string };
 
@@ -15,19 +15,7 @@ const THEME_OPTIONS: ThemeOption[] = [
 
 export default function SettingsScreen() {
   const { themePreference, setThemePreference } = useSettings();
-  const colorScheme = useAppColorScheme();
-  const isDark = colorScheme === 'dark';
-
-  const colors = {
-    background: isDark ? '#111' : '#f5f5f5',
-    card: isDark ? '#1e1e1e' : '#fff',
-    text: isDark ? '#f0f0f0' : '#1a1a1a',
-    subtext: isDark ? '#999' : '#666',
-    border: isDark ? '#2a2a2a' : '#e5e5e5',
-    tint: '#007AFF',
-    selectedBg: isDark ? '#1a2d3d' : '#e8f3ff',
-    selectedBorder: '#007AFF',
-  };
+  const { colors } = useTheme();
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
@@ -50,8 +38,8 @@ export default function SettingsScreen() {
                   key={opt.value}
                   style={({ pressed }) => [
                     styles.option,
-                    { borderColor: selected ? colors.selectedBorder : colors.border, opacity: pressed ? 0.75 : 1 },
-                    selected && { backgroundColor: colors.selectedBg },
+                    { borderColor: selected ? colors.tint : colors.border, opacity: pressed ? 0.75 : 1 },
+                    selected && { backgroundColor: colors.tintSubtle },
                   ]}
                   onPress={() => setThemePreference(opt.value)}
                 >

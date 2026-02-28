@@ -15,29 +15,16 @@ import {
 import CategoryIconPicker from '@/components/CategoryIconPicker';
 import { CATEGORY_SUGGESTIONS } from '@/constants/category-suggestions';
 import { usePhotosContext } from '@/context/photos-context';
-import { useAppColorScheme } from '@/hooks/use-app-color-scheme';
+import { useTheme } from '@/hooks/use-theme';
 
 export default function Onboarding() {
   const { addCategory } = usePhotosContext();
-  const colorScheme = useAppColorScheme();
-  const isDark = colorScheme === 'dark';
+  const { colors } = useTheme();
 
   const [customName, setCustomName] = useState('');
   const [customIcon, setCustomIcon] = useState<string | undefined>(undefined);
   const [showIconPicker, setShowIconPicker] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  const colors = {
-    background: isDark ? '#111' : '#f5f5f5',
-    card: isDark ? '#1e1e1e' : '#fff',
-    text: isDark ? '#f0f0f0' : '#1a1a1a',
-    subtext: isDark ? '#999' : '#666',
-    border: isDark ? '#2a2a2a' : '#e5e5e5',
-    chip: isDark ? '#2a2a2a' : '#efefef',
-    chipText: isDark ? '#e0e0e0' : '#333',
-    input: isDark ? '#1e1e1e' : '#fff',
-    tint: '#007AFF',
-  };
 
   async function startTracking(name: string, icon?: string) {
     const trimmed = name.trim();
@@ -75,14 +62,14 @@ export default function Onboarding() {
               key={name}
               style={({ pressed }) => [
                 styles.chip,
-                { backgroundColor: colors.chip, borderColor: colors.border },
+                { backgroundColor: colors.input, borderColor: colors.border },
                 pressed && styles.chipPressed,
               ]}
               onPress={() => startTracking(name, icon)}
               disabled={loading}
             >
-              <MaterialIcons name={icon as any} size={15} color={colors.chipText} />
-              <Text style={[styles.chipText, { color: colors.chipText }]}>{name}</Text>
+              <MaterialIcons name={icon as any} size={15} color={colors.text} />
+              <Text style={[styles.chipText, { color: colors.text }]}>{name}</Text>
             </Pressable>
           ))}
         </View>
@@ -100,7 +87,7 @@ export default function Onboarding() {
                 styles.iconBtn,
                 {
                   borderColor: showIconPicker || customIcon ? colors.tint : colors.border,
-                  backgroundColor: showIconPicker || customIcon ? colors.tint + '18' : 'transparent',
+                  backgroundColor: showIconPicker || customIcon ? colors.tintSubtle : 'transparent',
                 },
               ]}
               onPress={() => setShowIconPicker((v) => !v)}
@@ -139,7 +126,6 @@ export default function Onboarding() {
                 value={customIcon}
                 onChange={setCustomIcon}
                 tint={colors.tint}
-                isDark={isDark}
               />
             </View>
           )}

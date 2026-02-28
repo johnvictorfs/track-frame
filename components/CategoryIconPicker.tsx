@@ -2,17 +2,16 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Pressable, ScrollView, StyleSheet } from 'react-native';
 
 import { CATEGORY_ICONS } from '@/constants/category-suggestions';
+import { useTheme } from '@/hooks/use-theme';
 
 type Props = {
   value: string | undefined;
   onChange: (icon: string | undefined) => void;
   tint: string;
-  isDark: boolean;
 };
 
-export default function CategoryIconPicker({ value, onChange, tint, isDark }: Props) {
-  const defaultColor = isDark ? '#666' : '#999';
-  const border = isDark ? '#2a2a2a' : '#e5e5e5';
+export default function CategoryIconPicker({ value, onChange, tint }: Props) {
+  const { colors } = useTheme();
 
   return (
     <ScrollView
@@ -23,12 +22,12 @@ export default function CategoryIconPicker({ value, onChange, tint, isDark }: Pr
       <Pressable
         style={[
           styles.btn,
-          { borderColor: !value ? tint : border },
+          { borderColor: !value ? tint : colors.border },
           !value && { backgroundColor: tint + '18' },
         ]}
         onPress={() => onChange(undefined)}
       >
-        <MaterialIcons name="block" size={22} color={!value ? tint : defaultColor} />
+        <MaterialIcons name="block" size={22} color={!value ? tint : colors.icon} />
       </Pressable>
 
       {CATEGORY_ICONS.map((icon) => {
@@ -38,7 +37,7 @@ export default function CategoryIconPicker({ value, onChange, tint, isDark }: Pr
             key={icon}
             style={[
               styles.btn,
-              { borderColor: selected ? tint : border },
+              { borderColor: selected ? tint : colors.border },
               selected && { backgroundColor: tint + '18' },
             ]}
             onPress={() => onChange(icon)}
@@ -46,7 +45,7 @@ export default function CategoryIconPicker({ value, onChange, tint, isDark }: Pr
             <MaterialIcons
               name={icon as any}
               size={22}
-              color={selected ? tint : defaultColor}
+              color={selected ? tint : colors.icon}
             />
           </Pressable>
         );

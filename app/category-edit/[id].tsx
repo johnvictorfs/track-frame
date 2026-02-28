@@ -16,22 +16,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import CategoryIconPicker from '@/components/CategoryIconPicker';
 import { usePhotosContext } from '@/context/photos-context';
-import { useAppColorScheme } from '@/hooks/use-app-color-scheme';
+import { useTheme } from '@/hooks/use-theme';
 
 export default function CategoryEditScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { getCategoryById, updateCategory } = usePhotosContext();
-  const colorScheme = useAppColorScheme();
-  const isDark = colorScheme === 'dark';
-
-  const colors = {
-    background: isDark ? '#111' : '#f5f5f5',
-    card: isDark ? '#1e1e1e' : '#fff',
-    text: isDark ? '#f0f0f0' : '#1a1a1a',
-    subtext: isDark ? '#999' : '#666',
-    border: isDark ? '#2a2a2a' : '#e5e5e5',
-    tint: '#007AFF',
-  };
+  const { colors } = useTheme();
 
   const category = getCategoryById(id);
 
@@ -71,7 +61,7 @@ export default function CategoryEditScreen() {
       <Stack.Screen
         options={{
           title: 'Edit Category',
-          headerStyle: { backgroundColor: isDark ? '#1a1a1a' : '#fff' },
+          headerStyle: { backgroundColor: colors.header },
           headerTintColor: colors.text,
           headerShadowVisible: false,
           headerRight: () => (
@@ -120,7 +110,6 @@ export default function CategoryEditScreen() {
               value={icon}
               onChange={setIcon}
               tint={colors.tint}
-              isDark={isDark}
             />
           </View>
 

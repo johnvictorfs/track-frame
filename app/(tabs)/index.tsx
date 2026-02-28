@@ -14,21 +14,12 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Category, usePhotosContext } from '@/context/photos-context';
-import { useAppColorScheme } from '@/hooks/use-app-color-scheme';
+import { useTheme } from '@/hooks/use-theme';
 import Onboarding from '@/components/Onboarding';
 
 export default function GalleryScreen() {
   const { categories, photos, loading, getLatestPhotoForCategory, deleteCategory } = usePhotosContext();
-  const colorScheme = useAppColorScheme();
-  const isDark = colorScheme === 'dark';
-
-  const colors = {
-    background: isDark ? '#111' : '#f5f5f5',
-    card: isDark ? '#1e1e1e' : '#fff',
-    text: isDark ? '#f0f0f0' : '#1a1a1a',
-    subtext: isDark ? '#999' : '#666',
-    border: isDark ? '#2a2a2a' : '#e5e5e5',
-  };
+  const { colors } = useTheme();
 
   function renderCategory({ item, index }: { item: Category; index: number }) {
     const latestPhoto = getLatestPhotoForCategory(item.id);

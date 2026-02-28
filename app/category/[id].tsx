@@ -15,7 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { usePhotosContext } from '@/context/photos-context';
-import { useAppColorScheme } from '@/hooks/use-app-color-scheme';
+import { useTheme } from '@/hooks/use-theme';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const PHOTO_SIZE = (SCREEN_WIDTH - 48) / 2;
@@ -23,15 +23,7 @@ const PHOTO_SIZE = (SCREEN_WIDTH - 48) / 2;
 export default function CategoryScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { getCategoryById, getPhotosByCategory, addPhoto, deleteCategory } = usePhotosContext();
-  const colorScheme = useAppColorScheme();
-  const isDark = colorScheme === 'dark';
-
-  const colors = {
-    background: isDark ? '#111' : '#f5f5f5',
-    text: isDark ? '#f0f0f0' : '#1a1a1a',
-    subtext: isDark ? '#999' : '#666',
-    photoDate: isDark ? '#bbb' : '#555',
-  };
+  const { colors } = useTheme();
 
   const category = getCategoryById(id);
   const photos = getPhotosByCategory(id);
@@ -108,7 +100,7 @@ export default function CategoryScreen() {
       <Stack.Screen
         options={{
           title: category.name,
-          headerStyle: { backgroundColor: isDark ? '#1a1a1a' : '#fff' },
+          headerStyle: { backgroundColor: colors.header },
           headerTintColor: colors.text,
           headerShadowVisible: false,
           headerRight: () => (
@@ -117,7 +109,7 @@ export default function CategoryScreen() {
                 <MaterialIcons name="edit" size={22} color={colors.text} />
               </Pressable>
               <Pressable onPress={handleDeleteCategory} hitSlop={12}>
-                <MaterialIcons name="delete-outline" size={24} color="#e53935" />
+                <MaterialIcons name="delete-outline" size={24} color={colors.danger} />
               </Pressable>
             </View>
           ),
@@ -126,7 +118,7 @@ export default function CategoryScreen() {
 
       {photos.length === 0 ? (
         <View style={styles.empty}>
-          <MaterialIcons name="add-a-photo" size={72} color={isDark ? '#444' : '#ccc'} />
+          <MaterialIcons name="add-a-photo" size={72} color={colors.border} />
           <Text style={[styles.emptyTitle, { color: colors.text }]}>No photos yet</Text>
           <Text style={[styles.emptySubtitle, { color: colors.subtext }]}>
             Tap the + button to add your first photo to this category
@@ -144,7 +136,7 @@ export default function CategoryScreen() {
             <Animated.View entering={FadeIn.delay(index * 50).duration(300)} style={styles.photoItem}>
               <Pressable onPress={() => router.push(`/photo/${item.id}`)}>
                 <Image source={{ uri: item.uri }} style={styles.photo} contentFit="cover" />
-                <Text style={[styles.photoDate, { color: colors.photoDate }]}>
+                <Text style={[styles.photoDate, { color: colors.subtext }]}>
                   {formatDate(item.takenAt)}
                 </Text>
               </Pressable>

@@ -21,12 +21,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import CategoryIconPicker from '@/components/CategoryIconPicker';
 import { CATEGORY_SUGGESTIONS } from '@/constants/category-suggestions';
 import { usePhotosContext } from '@/context/photos-context';
-import { useAppColorScheme } from '@/hooks/use-app-color-scheme';
+import { useTheme } from '@/hooks/use-theme';
 
 export default function AddScreen() {
   const { categories, addCategory, addPhoto } = usePhotosContext();
-  const colorScheme = useAppColorScheme();
-  const isDark = colorScheme === 'dark';
+  const { colors } = useTheme();
 
   const [selectedUri, setSelectedUri] = useState<string | null>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
@@ -34,16 +33,6 @@ export default function AddScreen() {
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryIcon, setNewCategoryIcon] = useState<string | undefined>(undefined);
   const [saving, setSaving] = useState(false);
-
-  const colors = {
-    background: isDark ? '#111' : '#f5f5f5',
-    card: isDark ? '#1e1e1e' : '#fff',
-    text: isDark ? '#f0f0f0' : '#1a1a1a',
-    subtext: isDark ? '#999' : '#666',
-    border: isDark ? '#2a2a2a' : '#e5e5e5',
-    input: isDark ? '#2a2a2a' : '#f0f0f0',
-    tint: '#007AFF',
-  };
 
   async function handleCamera() {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -201,7 +190,7 @@ export default function AddScreen() {
                         { borderColor: colors.border, backgroundColor: colors.card },
                         newCategoryName === s.name && newCategoryIcon === s.icon && {
                           borderColor: colors.tint,
-                          backgroundColor: colors.tint + '18',
+                          backgroundColor: colors.tintSubtle,
                         },
                       ]}
                       onPress={() => {
@@ -256,7 +245,6 @@ export default function AddScreen() {
                   value={newCategoryIcon}
                   onChange={setNewCategoryIcon}
                   tint={colors.tint}
-                  isDark={isDark}
                 />
               </View>
             ) : (
@@ -274,7 +262,7 @@ export default function AddScreen() {
           </View>
 
           <Pressable
-            style={[styles.saveButton, !canSave && styles.saveButtonDisabled]}
+            style={[styles.saveButton, { backgroundColor: colors.tint }, !canSave && styles.saveButtonDisabled]}
             onPress={handleSave}
             disabled={saving || !canSave}
           >
@@ -405,7 +393,6 @@ const styles = StyleSheet.create({
   saveButton: {
     margin: 16,
     marginTop: 20,
-    backgroundColor: '#007AFF',
     borderRadius: 14,
     paddingVertical: 16,
     alignItems: 'center',
