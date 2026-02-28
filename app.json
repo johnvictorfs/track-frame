@@ -28,6 +28,14 @@
     "plugins": [
       "expo-router",
       [
+        "expo-image-picker",
+        {
+          "photosPermission": "TrackFrame needs access to your photos to add progress pictures.",
+          "cameraPermission": "TrackFrame needs access to your camera to take progress photos.",
+          "microphonePermission": false
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",

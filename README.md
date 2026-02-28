@@ -1,50 +1,59 @@
-# Welcome to your Expo app 👋
+# TrackFrame
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A React Native (Expo) app for tracking visual progress over time with photos.
 
-## Get started
+## What is it?
 
-1. Install dependencies
+TrackFrame lets you create categories and add photos to them over time, so you can look back and see how far you've come. Perfect for:
 
+- **Fitness & Gym** — Document your body transformation with regular progress shots
+- **Hair Growth** — Track the effects of a new hair care product or routine over months
+- **Pet Growth** — Watch your puppy, kitten, or other pet grow up week by week
+- **Plant Care** — Follow a plant from seedling to full bloom
+- **Recovery** — Monitor healing after surgery, injury, or illness
+- **Any visual change over time** — If it changes slowly, you can track it
+
+## Features
+
+- Take photos with your camera or import from your photo library
+- Organize photos into named, color-coded categories
+- See all categories at a glance with latest photo preview and count
+- Browse a chronological photo grid per category
+- Long-press a photo to delete it
+- Add more photos to any category at any time
+- Dark mode support
+
+## Getting Started
+
+1. Install dependencies:
    ```bash
    npm install
    ```
 
-2. Start the app
-
+2. Start the app:
    ```bash
    npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+   Then open in the [Expo Go](https://expo.dev/go) app, an Android emulator, or iOS simulator.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Project Structure
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```
+app/
+  (tabs)/
+    index.tsx       # Gallery — categories list
+    add.tsx         # Add Photo — pick/shoot and categorize
+  category/
+    [id].tsx        # Category detail — chronological photo grid
+context/
+  photos-context.tsx  # Shared state: categories and photos
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Tech Stack
 
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- [Expo](https://expo.dev) / React Native
+- [expo-router](https://expo.github.io/router) — file-based navigation
+- [expo-image-picker](https://docs.expo.dev/versions/latest/sdk/imagepicker/) — camera & library access
+- [expo-file-system](https://docs.expo.dev/versions/latest/sdk/filesystem/) — persistent photo storage
+- [@react-native-async-storage/async-storage](https://react-native-async-storage.github.io/async-storage/) — metadata persistence

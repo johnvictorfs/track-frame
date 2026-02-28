@@ -1,98 +1,179 @@
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { router } from 'expo-router';
+import {
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  StyleSheet,
+  Text,
+  useColorScheme,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { Category, usePhotosContext } from '@/context/photos-context';
 
-export default function HomeScreen() {
+export default function GalleryScreen() {
+  const { categories, photos, loading, getLatestPhotoForCategory } = usePhotosContext();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+
+  const colors = {
+    background: isDark ? '#111' : '#f5f5f5',
+    card: isDark ? '#1e1e1e' : '#fff',
+    text: isDark ? '#f0f0f0' : '#1a1a1a',
+    subtext: isDark ? '#999' : '#666',
+    border: isDark ? '#2a2a2a' : '#e5e5e5',
+  };
+
+  function renderCategory({ item }: { item: Category }) {
+    const latestPhoto = getLatestPhotoForCategory(item.id);
+    const photoCount = photos.filter((p) => p.categoryId === item.id).length;
+    const lastDate = latestPhoto
+      ? new Date(latestPhoto.takenAt).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+        })
+      : null;
+
+    return (
+      <Pressable
+        style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
+        onPress={() => router.push(`/category/${item.id}`)}
+      >
+        <View style={[styles.colorBar, { backgroundColor: item.color }]} />
+        {latestPhoto ? (
+          <Image source={{ uri: latestPhoto.uri }} style={styles.thumbnail} contentFit="cover" />
+        ) : (
+          <View
+            style={[
+              styles.thumbnail,
+              styles.thumbnailPlaceholder,
+              { backgroundColor: item.color + '22' },
+            ]}
+          >
+            <MaterialIcons name="add-a-photo" size={28} color={item.color} />
+          </View>
+        )}
+        <View style={styles.cardInfo}>
+          <Text style={[styles.categoryName, { color: colors.text }]}>{item.name}</Text>
+          <Text style={[styles.photoCount, { color: colors.subtext }]}>
+            {photoCount} {photoCount === 1 ? 'photo' : 'photos'}
+          </Text>
+          {lastDate && (
+            <Text style={[styles.lastDate, { color: colors.subtext }]}>Updated {lastDate}</Text>
+          )}
+        </View>
+        <MaterialIcons name="chevron-right" size={24} color={colors.subtext} style={{ marginRight: 12 }} />
+      </Pressable>
+    );
+  }
+
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+        <ActivityIndicator style={{ flex: 1 }} />
+      </SafeAreaView>
+    );
+  }
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={styles.header}>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>TrackFrame</Text>
+      </View>
+      {categories.length === 0 ? (
+        <View style={styles.empty}>
+          <MaterialIcons name="photo-library" size={72} color={isDark ? '#444' : '#ccc'} />
+          <Text style={[styles.emptyTitle, { color: colors.text }]}>Nothing tracked yet</Text>
+          <Text style={[styles.emptySubtitle, { color: colors.subtext }]}>
+            Tap the Add Photo tab to start tracking your progress
+          </Text>
+        </View>
+      ) : (
+        <FlatList
+          data={categories}
+          keyExtractor={(item) => item.id}
+          renderItem={renderCategory}
+          contentContainerStyle={styles.list}
+          showsVerticalScrollIndicator={false}
         />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
-
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+      )}
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  container: {
+    flex: 1,
+  },
+  header: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: '700',
+    letterSpacing: -0.5,
+  },
+  list: {
+    paddingHorizontal: 16,
+    paddingBottom: 24,
+    gap: 12,
+  },
+  card: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    borderRadius: 14,
+    overflow: 'hidden',
+    borderWidth: 1,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  colorBar: {
+    width: 5,
+    alignSelf: 'stretch',
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  thumbnail: {
+    width: 72,
+    height: 72,
+    margin: 12,
+    borderRadius: 8,
+  },
+  thumbnailPlaceholder: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cardInfo: {
+    flex: 1,
+    paddingVertical: 14,
+    gap: 3,
+  },
+  categoryName: {
+    fontSize: 17,
+    fontWeight: '600',
+  },
+  photoCount: {
+    fontSize: 13,
+  },
+  lastDate: {
+    fontSize: 12,
+  },
+  empty: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 40,
+    gap: 12,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  emptySubtitle: {
+    fontSize: 15,
+    textAlign: 'center',
+    lineHeight: 22,
   },
 });
