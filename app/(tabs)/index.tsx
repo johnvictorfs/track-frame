@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Category, usePhotosContext } from '@/context/photos-context';
 import { useAppColorScheme } from '@/hooks/use-app-color-scheme';
+import Onboarding from '@/components/Onboarding';
 
 export default function GalleryScreen() {
   const { categories, photos, loading, getLatestPhotoForCategory } = usePhotosContext();
@@ -85,13 +86,7 @@ export default function GalleryScreen() {
         <Text style={[styles.headerTitle, { color: colors.text }]}>TrackFrame</Text>
       </View>
       {categories.length === 0 ? (
-        <View style={styles.empty}>
-          <MaterialIcons name="photo-library" size={72} color={isDark ? '#444' : '#ccc'} />
-          <Text style={[styles.emptyTitle, { color: colors.text }]}>Nothing tracked yet</Text>
-          <Text style={[styles.emptySubtitle, { color: colors.subtext }]}>
-            Tap the Add Photo tab to start tracking your progress
-          </Text>
-        </View>
+        <Onboarding />
       ) : (
         <FlatList
           data={categories}
@@ -158,22 +153,5 @@ const styles = StyleSheet.create({
   },
   lastDate: {
     fontSize: 12,
-  },
-  empty: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 40,
-    gap: 12,
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  emptySubtitle: {
-    fontSize: 15,
-    textAlign: 'center',
-    lineHeight: 22,
   },
 });
