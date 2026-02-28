@@ -2,6 +2,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { useState } from 'react';
 import {
   ActivityIndicator,
@@ -123,7 +124,7 @@ export default function AddScreen() {
         </Text>
         <View style={styles.pickRow}>
           <Pressable
-            style={[styles.pickButton, { backgroundColor: colors.card, borderColor: colors.border }]}
+            style={({ pressed }) => [styles.pickButton, { backgroundColor: colors.card, borderColor: colors.border, opacity: pressed ? 0.75 : 1 }]}
             onPress={handleCamera}
           >
             <MaterialIcons name="camera-alt" size={44} color={colors.tint} />
@@ -131,7 +132,7 @@ export default function AddScreen() {
             <Text style={[styles.pickButtonSub, { color: colors.subtext }]}>Take a new photo</Text>
           </Pressable>
           <Pressable
-            style={[styles.pickButton, { backgroundColor: colors.card, borderColor: colors.border }]}
+            style={({ pressed }) => [styles.pickButton, { backgroundColor: colors.card, borderColor: colors.border, opacity: pressed ? 0.75 : 1 }]}
             onPress={handleLibrary}
           >
             <MaterialIcons name="photo-library" size={44} color={colors.tint} />
@@ -152,12 +153,12 @@ export default function AddScreen() {
         style={{ flex: 1 }}
       >
         <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-          <View style={styles.previewContainer}>
+          <Animated.View entering={FadeIn.duration(350)} style={styles.previewContainer}>
             <Image source={{ uri: selectedUri }} style={styles.preview} contentFit="cover" />
             <Pressable style={styles.changePhotoBtn} onPress={reset}>
               <MaterialIcons name="close" size={18} color="#fff" />
             </Pressable>
-          </View>
+          </Animated.View>
 
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Select Category</Text>
 

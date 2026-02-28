@@ -1,6 +1,7 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import {
   ActivityIndicator,
   Alert,
@@ -29,7 +30,7 @@ export default function GalleryScreen() {
     border: isDark ? '#2a2a2a' : '#e5e5e5',
   };
 
-  function renderCategory({ item }: { item: Category }) {
+  function renderCategory({ item, index }: { item: Category; index: number }) {
     const latestPhoto = getLatestPhotoForCategory(item.id);
     const photoCount = photos.filter((p) => p.categoryId === item.id).length;
     const lastDate = latestPhoto
@@ -52,8 +53,9 @@ export default function GalleryScreen() {
     }
 
     return (
+      <Animated.View entering={FadeInDown.delay(index * 60).duration(300)}>
       <Pressable
-        style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
+        style={({ pressed }) => [styles.card, { backgroundColor: colors.card, borderColor: colors.border, opacity: pressed ? 0.85 : 1 }]}
         onPress={() => router.push(`/category/${item.id}`)}
         onLongPress={handleLongPress}
       >
@@ -86,6 +88,7 @@ export default function GalleryScreen() {
         </View>
         <MaterialIcons name="chevron-right" size={24} color={colors.subtext} style={{ marginRight: 12 }} />
       </Pressable>
+      </Animated.View>
     );
   }
 

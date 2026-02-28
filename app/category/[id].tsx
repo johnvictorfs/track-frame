@@ -2,6 +2,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
+import Animated, { FadeIn, ZoomIn } from 'react-native-reanimated';
 import {
   Alert,
   Dimensions,
@@ -139,23 +140,27 @@ export default function CategoryScreen() {
           columnWrapperStyle={styles.row}
           contentContainerStyle={styles.grid}
           showsVerticalScrollIndicator={false}
-          renderItem={({ item }) => (
-            <Pressable style={styles.photoItem} onPress={() => router.push(`/photo/${item.id}`)}>
-              <Image source={{ uri: item.uri }} style={styles.photo} contentFit="cover" />
-              <Text style={[styles.photoDate, { color: colors.photoDate }]}>
-                {formatDate(item.takenAt)}
-              </Text>
-            </Pressable>
+          renderItem={({ item, index }) => (
+            <Animated.View entering={FadeIn.delay(index * 50).duration(300)} style={styles.photoItem}>
+              <Pressable onPress={() => router.push(`/photo/${item.id}`)}>
+                <Image source={{ uri: item.uri }} style={styles.photo} contentFit="cover" />
+                <Text style={[styles.photoDate, { color: colors.photoDate }]}>
+                  {formatDate(item.takenAt)}
+                </Text>
+              </Pressable>
+            </Animated.View>
           )}
         />
       )}
 
-      <Pressable
-        style={[styles.fab, { backgroundColor: category.color }]}
-        onPress={handleAddPhoto}
-      >
-        <MaterialIcons name="add" size={30} color="#fff" />
-      </Pressable>
+      <Animated.View entering={ZoomIn.springify().damping(14)} style={styles.fabWrapper}>
+        <Pressable
+          style={[styles.fab, { backgroundColor: category.color }]}
+          onPress={handleAddPhoto}
+        >
+          <MaterialIcons name="add" size={30} color="#fff" />
+        </Pressable>
+      </Animated.View>
     </SafeAreaView>
   );
 }
@@ -203,19 +208,22 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 22,
   },
-  fab: {
+  fabWrapper: {
     position: 'absolute',
     bottom: 28,
     right: 24,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    alignItems: 'center',
-    justifyContent: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.25,
     shadowRadius: 6,
     elevation: 6,
+    borderRadius: 30,
+  },
+  fab: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

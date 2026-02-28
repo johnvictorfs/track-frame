@@ -48,9 +48,9 @@ export default function SettingsScreen() {
               return (
                 <Pressable
                   key={opt.value}
-                  style={[
+                  style={({ pressed }) => [
                     styles.option,
-                    { borderColor: selected ? colors.selectedBorder : colors.border },
+                    { borderColor: selected ? colors.selectedBorder : colors.border, opacity: pressed ? 0.75 : 1 },
                     selected && { backgroundColor: colors.selectedBg },
                   ]}
                   onPress={() => setThemePreference(opt.value)}
