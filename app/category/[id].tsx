@@ -111,9 +111,14 @@ export default function CategoryScreen() {
           headerTintColor: colors.text,
           headerShadowVisible: false,
           headerRight: () => (
-            <Pressable onPress={handleDeleteCategory} hitSlop={12}>
-              <MaterialIcons name="delete-outline" size={24} color="#e53935" />
-            </Pressable>
+            <View style={{ flexDirection: 'row', gap: 16 }}>
+              <Pressable onPress={() => router.push(`/category-edit/${id}`)} hitSlop={12}>
+                <MaterialIcons name="edit" size={22} color={colors.text} />
+              </Pressable>
+              <Pressable onPress={handleDeleteCategory} hitSlop={12}>
+                <MaterialIcons name="delete-outline" size={24} color="#e53935" />
+              </Pressable>
+            </View>
           ),
         }}
       />

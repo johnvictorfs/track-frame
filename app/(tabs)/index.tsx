@@ -68,7 +68,11 @@ export default function GalleryScreen() {
               { backgroundColor: item.color + '22' },
             ]}
           >
-            <MaterialIcons name="add-a-photo" size={28} color={item.color} />
+            <MaterialIcons
+              name={(item.icon as any) ?? 'add-a-photo'}
+              size={28}
+              color={item.color}
+            />
           </View>
         )}
         <View style={styles.cardInfo}>

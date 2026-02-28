@@ -7,6 +7,7 @@ export type Category = {
   name: string;
   createdAt: string;
   color: string;
+  icon?: string;
 };
 
 export type Photo = {
@@ -20,7 +21,8 @@ type PhotosContextType = {
   categories: Category[];
   photos: Photo[];
   loading: boolean;
-  addCategory: (name: string) => Promise<Category>;
+  addCategory: (name: string, icon?: string) => Promise<Category>;
+  updateCategory: (id: string, updates: { name?: string; icon?: string }) => Promise<void>;
   addPhoto: (uri: string, categoryId: string) => Promise<Photo>;
   deletePhoto: (id: string) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
@@ -56,7 +58,7 @@ export function PhotosProvider({ children }: { children: React.ReactNode }) {
     })();
   }, []);
 
-  const addCategory = useCallback(async (name: string): Promise<Category> => {
+  const addCategory = useCallback(async (name: string, icon?: string): Promise<Category> => {
     const usedColors = categories.map((c) => c.color);
     const available = CATEGORY_COLORS.filter((c) => !usedColors.includes(c));
     const color =
@@ -69,11 +71,18 @@ export function PhotosProvider({ children }: { children: React.ReactNode }) {
       name: name.trim(),
       createdAt: new Date().toISOString(),
       color,
+      icon,
     };
     const updated = [...categories, category];
     setCategories(updated);
     await AsyncStorage.setItem(CATEGORIES_KEY, JSON.stringify(updated));
     return category;
+  }, [categories]);
+
+  const updateCategory = useCallback(async (id: string, updates: { name?: string; icon?: string }) => {
+    const updated = categories.map((c) => c.id === id ? { ...c, ...updates } : c);
+    setCategories(updated);
+    await AsyncStorage.setItem(CATEGORIES_KEY, JSON.stringify(updated));
   }, [categories]);
 
   const addPhoto = useCallback(async (uri: string, categoryId: string): Promise<Photo> => {
@@ -140,6 +149,7 @@ export function PhotosProvider({ children }: { children: React.ReactNode }) {
         photos,
         loading,
         addCategory,
+        updateCategory,
         addPhoto,
         deletePhoto,
         deleteCategory,
