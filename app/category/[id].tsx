@@ -2,6 +2,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
+import { useState } from 'react';
 import Animated, { FadeIn, ZoomIn } from 'react-native-reanimated';
 import {
   Alert,
@@ -12,7 +13,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { usePhotosContext } from '@/context/photos-context';
 import { useTheme } from '@/hooks/use-theme';
@@ -24,9 +25,15 @@ export default function CategoryScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { getCategoryById, getPhotosByCategory, addPhoto, deleteCategory } = usePhotosContext();
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
 
   const category = getCategoryById(id);
-  const photos = getPhotosByCategory(id);
+  const rawPhotos = getPhotosByCategory(id);
+  const photos = [...rawPhotos].sort((a, b) => {
+    const diff = new Date(b.takenAt).getTime() - new Date(a.takenAt).getTime();
+    return sortOrder === 'newest' ? diff : -diff;
+  });
 
   function handleDeleteCategory() {
     Alert.alert(
@@ -105,6 +112,16 @@ export default function CategoryScreen() {
           headerShadowVisible: false,
           headerRight: () => (
             <View style={{ flexDirection: 'row', gap: 16 }}>
+              <Pressable
+                onPress={() => setSortOrder((o) => (o === 'newest' ? 'oldest' : 'newest'))}
+                hitSlop={12}
+              >
+                <MaterialIcons
+                  name={sortOrder === 'newest' ? 'arrow-downward' : 'arrow-upward'}
+                  size={22}
+                  color={colors.text}
+                />
+              </Pressable>
               <Pressable onPress={() => router.push(`/category-edit/${id}`)} hitSlop={12}>
                 <MaterialIcons name="edit" size={22} color={colors.text} />
               </Pressable>
@@ -145,7 +162,7 @@ export default function CategoryScreen() {
         />
       )}
 
-      <Animated.View entering={ZoomIn.springify().damping(14)} style={styles.fabWrapper}>
+      <Animated.View entering={ZoomIn.springify().damping(14)} style={[styles.fabWrapper, { bottom: 28 + insets.bottom }]}>
         <Pressable
           style={[styles.fab, { backgroundColor: category.color }]}
           onPress={handleAddPhoto}
@@ -202,7 +219,6 @@ const styles = StyleSheet.create({
   },
   fabWrapper: {
     position: 'absolute',
-    bottom: 28,
     right: 24,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
