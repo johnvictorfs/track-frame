@@ -19,7 +19,6 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import AppModal, { ModalConfig } from '@/components/AppModal';
-import CategoryIconPicker from '@/components/CategoryIconPicker';
 import { CATEGORY_SUGGESTIONS } from '@/constants/category-suggestions';
 import { usePhotosContext } from '@/context/photos-context';
 import { useTheme } from '@/hooks/use-theme';
@@ -43,7 +42,6 @@ export default function AddScreen() {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [showNewCategory, setShowNewCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
-  const [newCategoryIcon, setNewCategoryIcon] = useState<string | undefined>(undefined);
   const [saving, setSaving] = useState(false);
   const [modal, setModal] = useState<ModalConfig | null>(null);
 
@@ -101,7 +99,7 @@ export default function AddScreen() {
     try {
       let categoryId = selectedCategoryId;
       if (!categoryId && showNewCategory && newCategoryName.trim()) {
-        const category = await addCategory(newCategoryName.trim(), newCategoryIcon);
+        const category = await addCategory(newCategoryName.trim());
         categoryId = category.id;
       }
       if (!categoryId) {
@@ -124,7 +122,6 @@ export default function AddScreen() {
     setSelectedCategoryId(null);
     setShowNewCategory(false);
     setNewCategoryName('');
-    setNewCategoryIcon(undefined);
   }
 
   const hasCategory =
@@ -175,22 +172,22 @@ export default function AddScreen() {
                         style={[
                           styles.suggestionChip,
                           { borderColor: colors.border, backgroundColor: colors.card },
-                          newCategoryName === s.name && newCategoryIcon === s.icon && {
+                          newCategoryName === s.name && {
                             borderColor: colors.tint,
                             backgroundColor: colors.tintSubtle,
                           },
                         ]}
-                        onPress={() => { setNewCategoryName(s.name); setNewCategoryIcon(s.icon); }}
+                        onPress={() => setNewCategoryName(s.name)}
                       >
                         <MaterialIcons
                           name={s.icon as any}
                           size={16}
-                          color={newCategoryName === s.name && newCategoryIcon === s.icon ? colors.tint : colors.subtext}
+                          color={newCategoryName === s.name ? colors.tint : colors.subtext}
                         />
                         <Text
                           style={[
                             styles.suggestionText,
-                            { color: newCategoryName === s.name && newCategoryIcon === s.icon ? colors.tint : colors.subtext },
+                            { color: newCategoryName === s.name ? colors.tint : colors.subtext },
                           ]}
                         >
                           {s.name}
@@ -200,14 +197,8 @@ export default function AddScreen() {
                   </ScrollView>
 
                   <View style={[styles.newCategoryRow, { borderTopWidth: 1, borderTopColor: colors.border }]}>
-                    <MaterialIcons
-                      name={(newCategoryIcon as any) ?? 'label'}
-                      size={20}
-                      color={colors.tint}
-                      style={{ marginLeft: 16 }}
-                    />
                     <TextInput
-                      style={[styles.input, { color: colors.text }]}
+                      style={[styles.input, { color: colors.text, marginLeft: 16 }]}
                       placeholder="Category name..."
                       placeholderTextColor={colors.subtext}
                       value={newCategoryName}
@@ -216,17 +207,12 @@ export default function AddScreen() {
                       returnKeyType="done"
                     />
                     <Pressable
-                      onPress={() => { setShowNewCategory(false); setNewCategoryName(''); setNewCategoryIcon(undefined); }}
+                      onPress={() => { setShowNewCategory(false); setNewCategoryName(''); }}
                       style={{ paddingRight: 16 }}
                     >
                       <MaterialIcons name="close" size={20} color={colors.subtext} />
                     </Pressable>
                   </View>
-
-                  <View style={[styles.iconPickerLabel, { borderTopWidth: 1, borderTopColor: colors.border }]}>
-                    <Text style={[styles.iconPickerLabelText, { color: colors.subtext }]}>Icon (optional)</Text>
-                  </View>
-                  <CategoryIconPicker value={newCategoryIcon} onChange={setNewCategoryIcon} tint={colors.tint} />
                 </View>
               ) : (
                 <Pressable
@@ -433,17 +419,6 @@ const styles = StyleSheet.create({
   suggestionText: {
     fontSize: 13,
     fontWeight: '500',
-  },
-  iconPickerLabel: {
-    paddingHorizontal: 16,
-    paddingTop: 10,
-    paddingBottom: 2,
-  },
-  iconPickerLabelText: {
-    fontSize: 12,
-    fontWeight: '500',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
   },
   pickRow: {
     flexDirection: 'row',

@@ -7,7 +7,6 @@ export type Category = {
   name: string;
   createdAt: string;
   color: string;
-  icon?: string;
 };
 
 export type Photo = {
@@ -21,8 +20,8 @@ type PhotosContextType = {
   categories: Category[];
   photos: Photo[];
   loading: boolean;
-  addCategory: (name: string, icon?: string) => Promise<Category>;
-  updateCategory: (id: string, updates: { name?: string; icon?: string }) => Promise<void>;
+  addCategory: (name: string) => Promise<Category>;
+  updateCategory: (id: string, updates: { name?: string }) => Promise<void>;
   addPhoto: (uri: string, categoryId: string, takenAt?: string) => Promise<Photo>;
   addPhotos: (assets: { uri: string; takenAt?: string }[], categoryId: string) => Promise<Photo[]>;
   deletePhoto: (id: string) => Promise<void>;
@@ -59,7 +58,7 @@ export function PhotosProvider({ children }: { children: React.ReactNode }) {
     })();
   }, []);
 
-  const addCategory = useCallback(async (name: string, icon?: string): Promise<Category> => {
+  const addCategory = useCallback(async (name: string): Promise<Category> => {
     const usedColors = categories.map((c) => c.color);
     const available = CATEGORY_COLORS.filter((c) => !usedColors.includes(c));
     const color =
@@ -72,7 +71,6 @@ export function PhotosProvider({ children }: { children: React.ReactNode }) {
       name: name.trim(),
       createdAt: new Date().toISOString(),
       color,
-      icon,
     };
     const updated = [...categories, category];
     setCategories(updated);
@@ -80,7 +78,7 @@ export function PhotosProvider({ children }: { children: React.ReactNode }) {
     return category;
   }, [categories]);
 
-  const updateCategory = useCallback(async (id: string, updates: { name?: string; icon?: string }) => {
+  const updateCategory = useCallback(async (id: string, updates: { name?: string }) => {
     const updated = categories.map((c) => c.id === id ? { ...c, ...updates } : c);
     setCategories(updated);
     await AsyncStorage.setItem(CATEGORIES_KEY, JSON.stringify(updated));

@@ -12,7 +12,6 @@ import {
   View,
 } from 'react-native';
 
-import CategoryIconPicker from '@/components/CategoryIconPicker';
 import { CATEGORY_SUGGESTIONS } from '@/constants/category-suggestions';
 import { usePhotosContext } from '@/context/photos-context';
 import { useTheme } from '@/hooks/use-theme';
@@ -22,16 +21,14 @@ export default function Onboarding() {
   const { colors } = useTheme();
 
   const [customName, setCustomName] = useState('');
-  const [customIcon, setCustomIcon] = useState<string | undefined>(undefined);
-  const [showIconPicker, setShowIconPicker] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  async function startTracking(name: string, icon?: string) {
+  async function startTracking(name: string) {
     const trimmed = name.trim();
     if (!trimmed || loading) return;
     setLoading(true);
     try {
-      const category = await addCategory(trimmed, icon);
+      const category = await addCategory(trimmed);
       router.navigate({ pathname: '/(tabs)/add', params: { categoryId: category.id } });
     } finally {
       setLoading(false);
@@ -65,7 +62,7 @@ export default function Onboarding() {
                 { backgroundColor: colors.input, borderColor: colors.border },
                 pressed && styles.chipPressed,
               ]}
-              onPress={() => startTracking(name, icon)}
+              onPress={() => startTracking(name)}
               disabled={loading}
             >
               <MaterialIcons name={icon as any} size={15} color={colors.text} />
@@ -82,22 +79,6 @@ export default function Onboarding() {
 
         <View style={[styles.inputCard, { backgroundColor: colors.input, borderColor: colors.border }]}>
           <View style={styles.inputRow}>
-            <Pressable
-              style={[
-                styles.iconBtn,
-                {
-                  borderColor: showIconPicker || customIcon ? colors.tint : colors.border,
-                  backgroundColor: showIconPicker || customIcon ? colors.tintSubtle : 'transparent',
-                },
-              ]}
-              onPress={() => setShowIconPicker((v) => !v)}
-            >
-              <MaterialIcons
-                name={customIcon ? (customIcon as any) : 'emoji-emotions'}
-                size={18}
-                color={showIconPicker || customIcon ? colors.tint : colors.subtext}
-              />
-            </Pressable>
             <TextInput
               style={[styles.input, { color: colors.text }]}
               placeholder="e.g. Beard Growth…"
@@ -105,7 +86,7 @@ export default function Onboarding() {
               value={customName}
               onChangeText={setCustomName}
               returnKeyType="go"
-              onSubmitEditing={() => startTracking(customName, customIcon)}
+              onSubmitEditing={() => startTracking(customName)}
             />
             <Pressable
               style={[
@@ -113,22 +94,12 @@ export default function Onboarding() {
                 { backgroundColor: colors.tint },
                 !customName.trim() && styles.goButtonDisabled,
               ]}
-              onPress={() => startTracking(customName, customIcon)}
+              onPress={() => startTracking(customName)}
               disabled={!customName.trim() || loading}
             >
               <MaterialIcons name="arrow-forward" size={20} color="#fff" />
             </Pressable>
           </View>
-
-          {showIconPicker && (
-            <View style={[styles.pickerDivider, { borderTopColor: colors.border }]}>
-              <CategoryIconPicker
-                value={customIcon}
-                onChange={setCustomIcon}
-                tint={colors.tint}
-              />
-            </View>
-          )}
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -205,15 +176,6 @@ const styles = StyleSheet.create({
     paddingRight: 6,
     paddingVertical: 6,
   },
-  iconBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 8,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 8,
-  },
   input: {
     flex: 1,
     fontSize: 16,
@@ -228,8 +190,5 @@ const styles = StyleSheet.create({
   },
   goButtonDisabled: {
     opacity: 0.35,
-  },
-  pickerDivider: {
-    borderTopWidth: 1,
   },
 });

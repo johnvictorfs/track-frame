@@ -17,7 +17,6 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import AppModal, { ModalConfig } from '@/components/AppModal';
-import CategoryIconPicker from '@/components/CategoryIconPicker';
 import { CATEGORY_SUGGESTIONS } from '@/constants/category-suggestions';
 import { Category, usePhotosContext } from '@/context/photos-context';
 import { useTheme } from '@/hooks/use-theme';
@@ -29,23 +28,19 @@ function NewCategoryFooter() {
 
   const [expanded, setExpanded] = useState(false);
   const [name, setName] = useState('');
-  const [icon, setIcon] = useState<string | undefined>(undefined);
-  const [showIconPicker, setShowIconPicker] = useState(false);
   const [loading, setLoading] = useState(false);
 
   function collapse() {
     setExpanded(false);
     setName('');
-    setIcon(undefined);
-    setShowIconPicker(false);
   }
 
-  async function handleCreate(categoryName: string, categoryIcon?: string) {
+  async function handleCreate(categoryName: string) {
     const trimmed = categoryName.trim();
     if (!trimmed || loading) return;
     setLoading(true);
     try {
-      const category = await addCategory(trimmed, categoryIcon);
+      const category = await addCategory(trimmed);
       collapse();
       router.navigate({ pathname: '/(tabs)/add', params: { categoryId: category.id } });
     } finally {
@@ -90,7 +85,7 @@ function NewCategoryFooter() {
               { backgroundColor: colors.input, borderColor: colors.border },
               pressed && { opacity: 0.6 },
             ]}
-            onPress={() => handleCreate(suggName, suggIcon)}
+            onPress={() => handleCreate(suggName)}
             disabled={loading}
           >
             <MaterialIcons name={suggIcon as any} size={14} color={colors.text} />
@@ -101,22 +96,6 @@ function NewCategoryFooter() {
 
       <View style={[styles.ncInputCard, { backgroundColor: colors.input, borderColor: colors.border }]}>
         <View style={styles.ncInputRow}>
-          <Pressable
-            style={[
-              styles.ncIconBtn,
-              {
-                borderColor: showIconPicker || icon ? colors.tint : colors.border,
-                backgroundColor: showIconPicker || icon ? colors.tintSubtle : 'transparent',
-              },
-            ]}
-            onPress={() => setShowIconPicker((v) => !v)}
-          >
-            <MaterialIcons
-              name={icon ? (icon as any) : 'emoji-emotions'}
-              size={18}
-              color={showIconPicker || icon ? colors.tint : colors.subtext}
-            />
-          </Pressable>
           <TextInput
             style={[styles.ncInput, { color: colors.text }]}
             placeholder="Category name…"
@@ -124,7 +103,7 @@ function NewCategoryFooter() {
             value={name}
             onChangeText={setName}
             returnKeyType="go"
-            onSubmitEditing={() => handleCreate(name, icon)}
+            onSubmitEditing={() => handleCreate(name)}
             autoFocus
           />
           <Pressable
@@ -133,17 +112,12 @@ function NewCategoryFooter() {
               { backgroundColor: colors.tint },
               !name.trim() && styles.ncGoButtonDisabled,
             ]}
-            onPress={() => handleCreate(name, icon)}
+            onPress={() => handleCreate(name)}
             disabled={!name.trim() || loading}
           >
             <MaterialIcons name="arrow-forward" size={20} color="#fff" />
           </Pressable>
         </View>
-        {showIconPicker && (
-          <View style={[styles.ncPickerDivider, { borderTopColor: colors.border }]}>
-            <CategoryIconPicker value={icon} onChange={setIcon} tint={colors.tint} />
-          </View>
-        )}
       </View>
     </View>
   );
@@ -195,7 +169,7 @@ export default function GalleryScreen() {
             ]}
           >
             <MaterialIcons
-              name={(item.icon as any) ?? 'add-a-photo'}
+              name="add-a-photo"
               size={28}
               color={item.color}
             />
@@ -370,15 +344,6 @@ const styles = StyleSheet.create({
     paddingRight: 6,
     paddingVertical: 6,
   },
-  ncIconBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 8,
-  },
   ncInput: {
     flex: 1,
     fontSize: 15,
@@ -393,8 +358,5 @@ const styles = StyleSheet.create({
   },
   ncGoButtonDisabled: {
     opacity: 0.35,
-  },
-  ncPickerDivider: {
-    borderTopWidth: 1,
   },
 });

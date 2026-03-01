@@ -1,4 +1,3 @@
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -14,7 +13,6 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import AppModal, { ModalConfig } from '@/components/AppModal';
-import CategoryIconPicker from '@/components/CategoryIconPicker';
 import { usePhotosContext } from '@/context/photos-context';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -29,13 +27,11 @@ export default function CategoryEditScreen() {
   const category = getCategoryById(id);
 
   const [name, setName] = useState(category?.name ?? '');
-  const [icon, setIcon] = useState<string | undefined>(category?.icon);
   const [modal, setModal] = useState<ModalConfig | null>(null);
 
   useEffect(() => {
     if (category) {
       setName(category.name);
-      setIcon(category.icon);
     }
   }, [category?.id]);
 
@@ -45,7 +41,7 @@ export default function CategoryEditScreen() {
       setModal({ title: 'Name Required', message: 'Please enter a category name.' });
       return;
     }
-    await updateCategory(id, { name: trimmed, icon });
+    await updateCategory(id, { name: trimmed });
     router.back();
   }
 
@@ -91,32 +87,6 @@ export default function CategoryEditScreen() {
             />
           </View>
 
-          <Text style={[styles.sectionLabel, { color: colors.subtext }]}>Icon (optional)</Text>
-          <View style={[styles.iconCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <View style={styles.currentIcon}>
-              {icon ? (
-                <View style={[styles.iconPreview, { backgroundColor: category.color + '22' }]}>
-                  <MaterialIcons name={icon as any} size={32} color={category.color} />
-                </View>
-              ) : (
-                <View style={[styles.iconPreview, { backgroundColor: colors.border }]}>
-                  <MaterialIcons name="block" size={32} color={colors.subtext} />
-                </View>
-              )}
-              <Text style={[styles.currentIconLabel, { color: colors.subtext }]}>
-                {icon ? 'Current icon' : 'No icon'}
-              </Text>
-            </View>
-
-            <View style={[styles.divider, { backgroundColor: colors.border }]} />
-
-            <CategoryIconPicker
-              value={icon}
-              onChange={setIcon}
-              tint={colors.tint}
-            />
-          </View>
-
           <Pressable
             style={[styles.saveButton, { backgroundColor: colors.tint }]}
             onPress={handleSave}
@@ -156,32 +126,6 @@ const styles = StyleSheet.create({
   nameInput: {
     fontSize: 17,
     padding: 16,
-  },
-  iconCard: {
-    marginHorizontal: 16,
-    borderRadius: 14,
-    borderWidth: 1,
-    overflow: 'hidden',
-  },
-  currentIcon: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    padding: 16,
-  },
-  iconPreview: {
-    width: 52,
-    height: 52,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  currentIconLabel: {
-    fontSize: 15,
-  },
-  divider: {
-    height: 1,
-    marginLeft: 16,
   },
   saveButton: {
     margin: 16,
