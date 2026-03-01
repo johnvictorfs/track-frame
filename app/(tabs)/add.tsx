@@ -74,23 +74,34 @@ export default function AddScreen() {
       setModal({ title: 'Permission Required', message: 'Photo library access is needed to select photos.' });
       return;
     }
+    let result;
     try {
-      const result = await ImagePicker.launchImageLibraryAsync({
+      result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: 'images',
         quality: 0.9,
         allowsMultipleSelection: true,
-        // exif reading on Android fails for cloud-only Google Photos URIs
-        exif: Platform.OS !== 'android',
+        exif: true,
       });
-      if (!result.canceled) {
-        const assets = result.assets.map((a) => ({
-          uri: a.uri,
-          takenAt: parseExifDate(a.exif?.DateTimeOriginal ?? a.exif?.DateTime),
-        }));
-        setSelectedAssets((prev) => [...prev, ...assets]);
-      }
     } catch {
-      setModal({ title: 'Error', message: 'Could not load the selected photos. Try selecting from the main library view instead of an album.' });
+      // EXIF reading fails for cloud-only Google Photos URIs on Android — retry without it
+      try {
+        result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: 'images',
+          quality: 0.9,
+          allowsMultipleSelection: true,
+          exif: false,
+        });
+      } catch {
+        setModal({ title: 'Error', message: 'Could not load the selected photos. Try selecting from the main library view instead of an album.' });
+        return;
+      }
+    }
+    if (!result.canceled) {
+      const assets = result.assets.map((a) => ({
+        uri: a.uri,
+        takenAt: parseExifDate(a.exif?.DateTimeOriginal ?? a.exif?.DateTime),
+      }));
+      setSelectedAssets((prev) => [...prev, ...assets]);
     }
   }
 
