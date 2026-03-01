@@ -184,7 +184,17 @@ export default function GalleryScreen() {
             <Text style={[styles.lastDate, { color: colors.subtext }]}>Updated {lastDate}</Text>
           )}
         </View>
-        <MaterialIcons name="chevron-right" size={24} color={colors.subtext} style={{ marginRight: 12 }} />
+        <Pressable
+          style={({ pressed }) => [
+            styles.addPhotoBtn,
+            { backgroundColor: colors.tintSubtle },
+            pressed && { opacity: 0.6 },
+          ]}
+          onPress={() => router.navigate({ pathname: '/(tabs)/add', params: { categoryId: item.id } })}
+          hitSlop={8}
+        >
+          <MaterialIcons name="add-a-photo" size={20} color={colors.tint} />
+        </Pressable>
       </Pressable>
       </Animated.View>
     );
@@ -281,6 +291,14 @@ const styles = StyleSheet.create({
   },
   lastDate: {
     fontSize: 12,
+  },
+  addPhotoBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
   },
   listFooter: {
     marginTop: 4,
