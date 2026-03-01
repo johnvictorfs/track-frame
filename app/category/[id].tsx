@@ -4,6 +4,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useRef, useState, useCallback } from 'react';
 import {
+  Alert,
   Dimensions,
   FlatList,
   Platform,
@@ -37,6 +38,7 @@ export default function CategoryScreen() {
   const [modal, setModal] = useState<ModalConfig | null>(null);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isSharing, setIsSharing] = useState(false);
 
   const category = getCategoryById(id);
   const rawPhotos = getPhotosByCategory(id);
@@ -84,6 +86,26 @@ export default function CategoryScreen() {
       if (next.size === 0) setSelectionMode(false);
       return next;
     });
+  }
+
+  async function handleBatchShare() {
+    const uris = photos.filter((p) => selectedIds.has(p.id)).map((p) => p.uri);
+    if (uris.length === 0) return;
+    setIsSharing(true);
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const RNShare = (require('react-native-share') as typeof import('react-native-share')).default;
+      await RNShare.open({ urls: uris, type: 'image/*', failOnCancel: false });
+    } catch (e: any) {
+      if (String(e).includes('RNShare')) {
+        Alert.alert(
+          'Dev Build Required',
+          'Sharing multiple photos at once requires a custom dev build. Run `npx expo run:android` or `npx expo run:ios` instead of Expo Go.',
+        );
+      }
+    } finally {
+      setIsSharing(false);
+    }
   }
 
   function handleBatchDelete() {
@@ -217,14 +239,24 @@ export default function CategoryScreen() {
             : undefined,
           headerRight: selectionMode
             ? () => (
-                <Pressable
-                  onPress={handleBatchDelete}
-                  hitSlop={12}
-                  disabled={selectedIds.size === 0}
-                  style={{ opacity: selectedIds.size === 0 ? 0.4 : 1 }}
-                >
-                  <MaterialIcons name="delete-outline" size={24} color={colors.danger} />
-                </Pressable>
+                <View style={{ flexDirection: 'row', gap: 16 }}>
+                  <Pressable
+                    onPress={handleBatchShare}
+                    hitSlop={12}
+                    disabled={selectedIds.size === 0 || isSharing}
+                    style={{ opacity: selectedIds.size === 0 || isSharing ? 0.4 : 1 }}
+                  >
+                    <MaterialIcons name="share" size={22} color={colors.text} />
+                  </Pressable>
+                  <Pressable
+                    onPress={handleBatchDelete}
+                    hitSlop={12}
+                    disabled={selectedIds.size === 0 || isSharing}
+                    style={{ opacity: selectedIds.size === 0 || isSharing ? 0.4 : 1 }}
+                  >
+                    <MaterialIcons name="delete-outline" size={24} color={colors.danger} />
+                  </Pressable>
+                </View>
               )
             : () => (
                 <View style={{ flexDirection: 'row', gap: 16 }}>
