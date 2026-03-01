@@ -156,7 +156,7 @@ export default function CategoryScreen() {
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
             <View style={styles.photoItem}>
-              <Pressable onPress={() => router.push(`/photo/${item.id}`)}>
+              <Pressable onPress={() => router.push(`/photo/${item.id}?categoryId=${id}`)}>
                 <Image source={{ uri: item.uri }} style={styles.photo} contentFit="cover" />
                 <Text style={[styles.photoDate, { color: colors.subtext }]}>
                   {formatDate(item.takenAt)}
