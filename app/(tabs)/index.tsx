@@ -1,21 +1,152 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
+import { useState } from 'react';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import {
   ActivityIndicator,
   Alert,
   FlatList,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import CategoryIconPicker from '@/components/CategoryIconPicker';
+import { CATEGORY_SUGGESTIONS } from '@/constants/category-suggestions';
 import { Category, usePhotosContext } from '@/context/photos-context';
 import { useTheme } from '@/hooks/use-theme';
 import Onboarding from '@/components/Onboarding';
+
+function NewCategoryFooter() {
+  const { addCategory } = usePhotosContext();
+  const { colors } = useTheme();
+
+  const [expanded, setExpanded] = useState(false);
+  const [name, setName] = useState('');
+  const [icon, setIcon] = useState<string | undefined>(undefined);
+  const [showIconPicker, setShowIconPicker] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  function collapse() {
+    setExpanded(false);
+    setName('');
+    setIcon(undefined);
+    setShowIconPicker(false);
+  }
+
+  async function handleCreate(categoryName: string, categoryIcon?: string) {
+    const trimmed = categoryName.trim();
+    if (!trimmed || loading) return;
+    setLoading(true);
+    try {
+      const category = await addCategory(trimmed, categoryIcon);
+      collapse();
+      router.navigate({ pathname: '/(tabs)/add', params: { categoryId: category.id } });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (!expanded) {
+    return (
+      <Pressable
+        style={({ pressed }) => [
+          styles.newCategoryBtn,
+          { borderColor: colors.border, backgroundColor: colors.card, opacity: pressed ? 0.7 : 1 },
+        ]}
+        onPress={() => setExpanded(true)}
+      >
+        <MaterialIcons name="add" size={18} color={colors.tint} />
+        <Text style={[styles.newCategoryBtnText, { color: colors.tint }]}>New category</Text>
+      </Pressable>
+    );
+  }
+
+  return (
+    <View style={[styles.newCategoryCard, { borderColor: colors.border, backgroundColor: colors.card }]}>
+      <View style={styles.newCategoryCardHeader}>
+        <Text style={[styles.newCategoryCardLabel, { color: colors.text }]}>New category</Text>
+        <Pressable onPress={collapse} hitSlop={8}>
+          <MaterialIcons name="close" size={18} color={colors.subtext} />
+        </Pressable>
+      </View>
+
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.chipsRow}
+      >
+        {CATEGORY_SUGGESTIONS.map(({ name: suggName, icon: suggIcon }) => (
+          <Pressable
+            key={suggName}
+            style={({ pressed }) => [
+              styles.chip,
+              { backgroundColor: colors.input, borderColor: colors.border },
+              pressed && { opacity: 0.6 },
+            ]}
+            onPress={() => handleCreate(suggName, suggIcon)}
+            disabled={loading}
+          >
+            <MaterialIcons name={suggIcon as any} size={14} color={colors.text} />
+            <Text style={[styles.chipText, { color: colors.text }]}>{suggName}</Text>
+          </Pressable>
+        ))}
+      </ScrollView>
+
+      <View style={[styles.ncInputCard, { backgroundColor: colors.input, borderColor: colors.border }]}>
+        <View style={styles.ncInputRow}>
+          <Pressable
+            style={[
+              styles.ncIconBtn,
+              {
+                borderColor: showIconPicker || icon ? colors.tint : colors.border,
+                backgroundColor: showIconPicker || icon ? colors.tintSubtle : 'transparent',
+              },
+            ]}
+            onPress={() => setShowIconPicker((v) => !v)}
+          >
+            <MaterialIcons
+              name={icon ? (icon as any) : 'emoji-emotions'}
+              size={18}
+              color={showIconPicker || icon ? colors.tint : colors.subtext}
+            />
+          </Pressable>
+          <TextInput
+            style={[styles.ncInput, { color: colors.text }]}
+            placeholder="Category name…"
+            placeholderTextColor={colors.subtext}
+            value={name}
+            onChangeText={setName}
+            returnKeyType="go"
+            onSubmitEditing={() => handleCreate(name, icon)}
+            autoFocus
+          />
+          <Pressable
+            style={[
+              styles.ncGoButton,
+              { backgroundColor: colors.tint },
+              !name.trim() && styles.ncGoButtonDisabled,
+            ]}
+            onPress={() => handleCreate(name, icon)}
+            disabled={!name.trim() || loading}
+          >
+            <MaterialIcons name="arrow-forward" size={20} color="#fff" />
+          </Pressable>
+        </View>
+        {showIconPicker && (
+          <View style={[styles.ncPickerDivider, { borderTopColor: colors.border }]}>
+            <CategoryIconPicker value={icon} onChange={setIcon} tint={colors.tint} />
+          </View>
+        )}
+      </View>
+    </View>
+  );
+}
 
 export default function GalleryScreen() {
   const { categories, photos, loading, getLatestPhotoForCategory, deleteCategory } = usePhotosContext();
@@ -103,8 +234,11 @@ export default function GalleryScreen() {
           data={categories}
           keyExtractor={(item) => item.id}
           renderItem={renderCategory}
+          ListFooterComponent={NewCategoryFooter}
+          ListFooterComponentStyle={styles.listFooter}
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         />
       )}
     </SafeAreaView>
@@ -164,5 +298,94 @@ const styles = StyleSheet.create({
   },
   lastDate: {
     fontSize: 12,
+  },
+  listFooter: {
+    marginTop: 4,
+  },
+  newCategoryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+  },
+  newCategoryBtnText: {
+    fontSize: 15,
+    fontWeight: '500',
+  },
+  newCategoryCard: {
+    borderRadius: 14,
+    borderWidth: 1,
+    padding: 14,
+    gap: 12,
+  },
+  newCategoryCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  newCategoryCardLabel: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  chipsRow: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingBottom: 2,
+  },
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  chipText: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  ncInputCard: {
+    borderRadius: 12,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  ncInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingLeft: 10,
+    paddingRight: 6,
+    paddingVertical: 6,
+  },
+  ncIconBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 8,
+  },
+  ncInput: {
+    flex: 1,
+    fontSize: 15,
+    paddingVertical: 6,
+  },
+  ncGoButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  ncGoButtonDisabled: {
+    opacity: 0.35,
+  },
+  ncPickerDivider: {
+    borderTopWidth: 1,
   },
 });
