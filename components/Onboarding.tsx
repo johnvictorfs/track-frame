@@ -31,8 +31,8 @@ export default function Onboarding() {
     if (!trimmed || loading) return;
     setLoading(true);
     try {
-      await addCategory(trimmed, icon);
-      router.navigate('/(tabs)/add');
+      const category = await addCategory(trimmed, icon);
+      router.navigate({ pathname: '/(tabs)/add', params: { categoryId: category.id } });
     } finally {
       setLoading(false);
     }
