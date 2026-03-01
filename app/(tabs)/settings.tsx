@@ -79,6 +79,15 @@ export default function SettingsScreen() {
               <Text style={[styles.linkText, { color: colors.tint }]}>Source Code</Text>
               <MaterialIcons name="open-in-new" size={16} color={colors.subtext} style={{ marginLeft: 'auto' }} />
             </Pressable>
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
+            <Pressable
+              style={({ pressed }) => [styles.linkRow, { opacity: pressed ? 0.6 : 1 }]}
+              onPress={() => Linking.openURL('https://github.com/johnvictorfs/track-frame/issues/new')}
+            >
+              <MaterialIcons name="bug-report" size={20} color={colors.tint} />
+              <Text style={[styles.linkText, { color: colors.tint }]}>Report an Issue</Text>
+              <MaterialIcons name="open-in-new" size={16} color={colors.subtext} style={{ marginLeft: 'auto' }} />
+            </Pressable>
           </View>
         </View>
       </SafeAreaView>
@@ -139,6 +148,10 @@ const styles = StyleSheet.create({
   optionLabel: {
     fontSize: 13,
     fontWeight: '500',
+  },
+  divider: {
+    height: 1,
+    marginVertical: 4,
   },
   linkRow: {
     flexDirection: 'row',
