@@ -30,11 +30,13 @@ export default function CategoryScreen() {
   const idRef = useRef(paramId ?? '');
   if (paramId) idRef.current = paramId;
   const id = idRef.current;
-  const { getCategoryById, getPhotosByCategory, addPhoto, addPhotos, deleteCategory } = usePhotosContext();
+  const { getCategoryById, getPhotosByCategory, addPhoto, addPhotos, deleteCategory, deletePhotos } = usePhotosContext();
   const { colors } = useTheme();
   const { sortOrder, setSortOrder } = useSettings();
   const insets = useSafeAreaInsets();
   const [modal, setModal] = useState<ModalConfig | null>(null);
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const category = getCategoryById(id);
   const rawPhotos = getPhotosByCategory(id);
@@ -55,6 +57,48 @@ export default function CategoryScreen() {
           onPress: async () => {
             await deleteCategory(id);
             router.back();
+          },
+        },
+      ],
+    });
+  }
+
+  function enterSelectionMode(photoId: string) {
+    setSelectionMode(true);
+    setSelectedIds(new Set([photoId]));
+  }
+
+  function exitSelectionMode() {
+    setSelectionMode(false);
+    setSelectedIds(new Set());
+  }
+
+  function togglePhotoSelection(photoId: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(photoId)) {
+        next.delete(photoId);
+      } else {
+        next.add(photoId);
+      }
+      if (next.size === 0) setSelectionMode(false);
+      return next;
+    });
+  }
+
+  function handleBatchDelete() {
+    const count = selectedIds.size;
+    setModal({
+      title: `Remove ${count} Photo${count !== 1 ? 's' : ''}`,
+      message: `Remove ${count} selected photo${count !== 1 ? 's' : ''} from tracking? Your original files won't be affected.`,
+      buttons: [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            await deletePhotos(Array.from(selectedIds));
+            exitSelectionMode();
           },
         },
       ],
@@ -149,20 +193,38 @@ export default function CategoryScreen() {
     >
       <Stack.Screen
         options={{
-          title: category.name,
+          title: selectionMode ? `${selectedIds.size} selected` : category.name,
           headerStyle: { backgroundColor: colors.header },
           headerTintColor: colors.text,
           headerShadowVisible: false,
-          headerRight: () => (
-            <View style={{ flexDirection: 'row', gap: 16 }}>
-              <Pressable onPress={() => router.push(`/category-edit/${id}`)} hitSlop={12}>
-                <MaterialIcons name="edit" size={22} color={colors.text} />
-              </Pressable>
-              <Pressable onPress={handleDeleteCategory} hitSlop={12}>
-                <MaterialIcons name="delete-outline" size={24} color={colors.danger} />
-              </Pressable>
-            </View>
-          ),
+          headerLeft: selectionMode
+            ? () => (
+                <Pressable onPress={exitSelectionMode} hitSlop={12} style={{ marginRight: 8 }}>
+                  <MaterialIcons name="close" size={24} color={colors.text} />
+                </Pressable>
+              )
+            : undefined,
+          headerRight: selectionMode
+            ? () => (
+                <Pressable
+                  onPress={handleBatchDelete}
+                  hitSlop={12}
+                  disabled={selectedIds.size === 0}
+                  style={{ opacity: selectedIds.size === 0 ? 0.4 : 1 }}
+                >
+                  <MaterialIcons name="delete-outline" size={24} color={colors.danger} />
+                </Pressable>
+              )
+            : () => (
+                <View style={{ flexDirection: 'row', gap: 16 }}>
+                  <Pressable onPress={() => router.push(`/category-edit/${id}`)} hitSlop={12}>
+                    <MaterialIcons name="edit" size={22} color={colors.text} />
+                  </Pressable>
+                  <Pressable onPress={handleDeleteCategory} hitSlop={12}>
+                    <MaterialIcons name="delete-outline" size={24} color={colors.danger} />
+                  </Pressable>
+                </View>
+              ),
         }}
       />
 
@@ -201,27 +263,55 @@ export default function CategoryScreen() {
               />
             </Pressable>
           }
-          renderItem={({ item }) => (
-            <View style={styles.photoItem}>
-              <Pressable onPress={() => router.push(`/photo/${item.id}?categoryId=${id}`)}>
-                <Image source={{ uri: item.uri }} style={styles.photo} contentFit="cover" />
-                <Text style={[styles.photoDate, { color: colors.subtext }]}>
-                  {formatDate(item.takenAt)}
-                </Text>
-              </Pressable>
-            </View>
-          )}
+          renderItem={({ item }) => {
+            const isSelected = selectedIds.has(item.id);
+            return (
+              <View style={styles.photoItem}>
+                <Pressable
+                  onPress={() => {
+                    if (selectionMode) {
+                      togglePhotoSelection(item.id);
+                    } else {
+                      router.push(`/photo/${item.id}?categoryId=${id}`);
+                    }
+                  }}
+                  onLongPress={() => {
+                    if (!selectionMode) {
+                      enterSelectionMode(item.id);
+                    }
+                  }}
+                  delayLongPress={300}
+                >
+                  <Image
+                    source={{ uri: item.uri }}
+                    style={[styles.photo, isSelected && styles.photoSelected]}
+                    contentFit="cover"
+                  />
+                  {isSelected && (
+                    <View style={styles.checkOverlay}>
+                      <MaterialIcons name="check-circle" size={26} color="#fff" />
+                    </View>
+                  )}
+                  <Text style={[styles.photoDate, { color: colors.subtext }]}>
+                    {formatDate(item.takenAt)}
+                  </Text>
+                </Pressable>
+              </View>
+            );
+          }}
         />
       )}
 
-      <View style={[styles.fabWrapper, { bottom: 28 + insets.bottom }]}>
-        <Pressable
-          style={[styles.fab, { backgroundColor: category.color }]}
-          onPress={handleAddPhoto}
-        >
-          <MaterialIcons name="add" size={30} color="#fff" />
-        </Pressable>
-      </View>
+      {!selectionMode && (
+        <View style={[styles.fabWrapper, { bottom: 28 + insets.bottom }]}>
+          <Pressable
+            style={[styles.fab, { backgroundColor: category.color }]}
+            onPress={handleAddPhoto}
+          >
+            <MaterialIcons name="add" size={30} color="#fff" />
+          </Pressable>
+        </View>
+      )}
 
       <AppModal
         visible={!!modal}
@@ -251,6 +341,14 @@ const styles = StyleSheet.create({
     width: PHOTO_SIZE,
     height: PHOTO_SIZE,
     borderRadius: 10,
+  },
+  photoSelected: {
+    opacity: 0.65,
+  },
+  checkOverlay: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
   },
   photoDate: {
     fontSize: 12,

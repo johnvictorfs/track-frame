@@ -25,6 +25,7 @@ type PhotosContextType = {
   addPhoto: (uri: string, categoryId: string, takenAt?: string) => Promise<Photo>;
   addPhotos: (assets: { uri: string; takenAt?: string }[], categoryId: string) => Promise<Photo[]>;
   deletePhoto: (id: string) => Promise<void>;
+  deletePhotos: (ids: string[]) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
   getPhotosByCategory: (categoryId: string) => Photo[];
   getCategoryById: (id: string) => Category | undefined;
@@ -123,11 +124,14 @@ export function PhotosProvider({ children }: { children: React.ReactNode }) {
   }, [photos]);
 
   const deletePhoto = useCallback(async (id: string) => {
-    const photo = photos.find((p) => p.id === id);
-    if (photo) {
-      await FileSystem.deleteAsync(photo.uri, { idempotent: true });
-    }
     const updated = photos.filter((p) => p.id !== id);
+    setPhotos(updated);
+    await AsyncStorage.setItem(PHOTOS_KEY, JSON.stringify(updated));
+  }, [photos]);
+
+  const deletePhotos = useCallback(async (ids: string[]) => {
+    const idSet = new Set(ids);
+    const updated = photos.filter((p) => !idSet.has(p.id));
     setPhotos(updated);
     await AsyncStorage.setItem(PHOTOS_KEY, JSON.stringify(updated));
   }, [photos]);
@@ -169,6 +173,7 @@ export function PhotosProvider({ children }: { children: React.ReactNode }) {
         addPhoto,
         addPhotos,
         deletePhoto,
+        deletePhotos,
         deleteCategory,
         getPhotosByCategory,
         getCategoryById,
