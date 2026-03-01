@@ -157,6 +157,26 @@ export default function PhotoScreen() {
           <Text style={styles.dayLabel}>{getDayLabel(currentPhoto.takenAt, currentIndex)}</Text>
         )}
         <Text style={styles.date}>{formatDate(currentPhoto.takenAt)}</Text>
+        {categoryPhotos.length > 1 && (
+          <View style={styles.navRow}>
+            <Pressable
+              style={[styles.navBtn, currentIndex === 0 && styles.navBtnDisabled]}
+              onPress={() => flatListRef.current?.scrollToIndex({ index: 0, animated: true })}
+              disabled={currentIndex === 0}
+            >
+              <MaterialIcons name="first-page" size={20} color={currentIndex === 0 ? 'rgba(255,255,255,0.2)' : '#fff'} />
+              <Text style={[styles.navBtnText, currentIndex === 0 && styles.navBtnTextDisabled]}>First</Text>
+            </Pressable>
+            <Pressable
+              style={[styles.navBtn, currentIndex === categoryPhotos.length - 1 && styles.navBtnDisabled]}
+              onPress={() => flatListRef.current?.scrollToIndex({ index: categoryPhotos.length - 1, animated: true })}
+              disabled={currentIndex === categoryPhotos.length - 1}
+            >
+              <Text style={[styles.navBtnText, currentIndex === categoryPhotos.length - 1 && styles.navBtnTextDisabled]}>Latest</Text>
+              <MaterialIcons name="last-page" size={20} color={currentIndex === categoryPhotos.length - 1 ? 'rgba(255,255,255,0.2)' : '#fff'} />
+            </Pressable>
+          </View>
+        )}
         <Pressable style={styles.removeBtn} onPress={handleRemove}>
           <MaterialIcons name="remove-circle-outline" size={22} color="#ff4444" />
           <Text style={styles.removeBtnText}>Remove from Tracking</Text>
@@ -206,5 +226,30 @@ const styles = StyleSheet.create({
     color: '#ff4444',
     fontSize: 16,
     fontWeight: '500',
+  },
+  navRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 6,
+  },
+  navBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    backgroundColor: '#1a1a1a',
+  },
+  navBtnDisabled: {
+    opacity: 0.4,
+  },
+  navBtnText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '500',
+  },
+  navBtnTextDisabled: {
+    color: 'rgba(255,255,255,0.2)',
   },
 });
