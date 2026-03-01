@@ -3,7 +3,6 @@ import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import Animated, { FadeIn, ZoomIn } from 'react-native-reanimated';
 import {
   Alert,
   Dimensions,
@@ -149,27 +148,27 @@ export default function CategoryScreen() {
           columnWrapperStyle={styles.row}
           contentContainerStyle={styles.grid}
           showsVerticalScrollIndicator={false}
-          renderItem={({ item, index }) => (
-            <Animated.View entering={FadeIn.delay(index * 50).duration(300)} style={styles.photoItem}>
+          renderItem={({ item }) => (
+            <View style={styles.photoItem}>
               <Pressable onPress={() => router.push(`/photo/${item.id}`)}>
                 <Image source={{ uri: item.uri }} style={styles.photo} contentFit="cover" />
                 <Text style={[styles.photoDate, { color: colors.subtext }]}>
                   {formatDate(item.takenAt)}
                 </Text>
               </Pressable>
-            </Animated.View>
+            </View>
           )}
         />
       )}
 
-      <Animated.View entering={ZoomIn.springify().damping(14)} style={[styles.fabWrapper, { bottom: 28 + insets.bottom }]}>
+      <View style={[styles.fabWrapper, { bottom: 28 + insets.bottom }]}>
         <Pressable
           style={[styles.fab, { backgroundColor: category.color }]}
           onPress={handleAddPhoto}
         >
           <MaterialIcons name="add" size={30} color="#fff" />
         </Pressable>
-      </Animated.View>
+      </View>
     </SafeAreaView>
   );
 }
