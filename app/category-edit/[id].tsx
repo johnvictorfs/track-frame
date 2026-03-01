@@ -1,6 +1,6 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -19,7 +19,10 @@ import { usePhotosContext } from '@/context/photos-context';
 import { useTheme } from '@/hooks/use-theme';
 
 export default function CategoryEditScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id: paramId } = useLocalSearchParams<{ id: string }>();
+  const idRef = useRef(paramId ?? '');
+  if (paramId) idRef.current = paramId;
+  const id = idRef.current;
   const { getCategoryById, updateCategory } = usePhotosContext();
   const { colors } = useTheme();
 

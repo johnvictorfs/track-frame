@@ -1,13 +1,17 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Image } from 'expo-image';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
+import { useRef } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { usePhotosContext } from '@/context/photos-context';
 
 export default function PhotoScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id: paramId } = useLocalSearchParams<{ id: string }>();
+  const idRef = useRef(paramId ?? '');
+  if (paramId) idRef.current = paramId;
+  const id = idRef.current;
   const { photos, deletePhoto } = usePhotosContext();
   const subtext = 'rgba(255,255,255,0.6)';
 

@@ -2,7 +2,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   Alert,
   Dimensions,
@@ -21,7 +21,13 @@ const SCREEN_WIDTH = Dimensions.get('window').width;
 const PHOTO_SIZE = (SCREEN_WIDTH - 48) / 2;
 
 export default function CategoryScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id: paramId } = useLocalSearchParams<{ id: string }>();
+  // Stabilise the id via a ref so it keeps its value during the pop animation.
+  // expo-router clears useLocalSearchParams before the screen unmounts, which
+  // triggers the "not found" early-return and wipes the screen content mid-slide.
+  const idRef = useRef(paramId ?? '');
+  if (paramId) idRef.current = paramId;
+  const id = idRef.current;
   const { getCategoryById, getPhotosByCategory, addPhoto, deleteCategory } = usePhotosContext();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
