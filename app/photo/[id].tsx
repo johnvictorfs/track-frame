@@ -133,8 +133,8 @@ export default function PhotoScreen() {
             data={categoryPhotos}
             keyExtractor={(p) => p.id}
             horizontal
-            pagingEnabled
             showsHorizontalScrollIndicator={false}
+            decelerationRate="fast"
             initialScrollIndex={initialIndex}
             getItemLayout={(_, index) => ({
               length: SCREEN_WIDTH,
