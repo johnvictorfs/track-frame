@@ -23,12 +23,22 @@ import { CATEGORY_SUGGESTIONS } from '@/constants/category-suggestions';
 import { usePhotosContext } from '@/context/photos-context';
 import { useTheme } from '@/hooks/use-theme';
 
+type SelectedAsset = { uri: string; takenAt?: string };
+
+function parseExifDate(raw?: string | null): string | undefined {
+  if (!raw) return undefined;
+  // EXIF format: "YYYY:MM:DD HH:MM:SS" → normalize first colon-pair to dashes
+  const normalized = raw.replace(/^(\d{4}):(\d{2}):(\d{2})/, '$1-$2-$3');
+  const d = new Date(normalized);
+  return isNaN(d.getTime()) ? undefined : d.toISOString();
+}
+
 export default function AddScreen() {
-  const { categories, addCategory, addPhoto } = usePhotosContext();
+  const { categories, addCategory, addPhotos } = usePhotosContext();
   const { colors } = useTheme();
   const { categoryId: preselectedCategoryId } = useLocalSearchParams<{ categoryId?: string }>();
 
-  const [selectedUri, setSelectedUri] = useState<string | null>(null);
+  const [selectedAssets, setSelectedAssets] = useState<SelectedAsset[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [showNewCategory, setShowNewCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
@@ -48,8 +58,14 @@ export default function AddScreen() {
       Alert.alert('Permission required', 'Camera access is needed to take photos.');
       return;
     }
-    const result = await ImagePicker.launchCameraAsync({ mediaTypes: 'images', quality: 0.9 });
-    if (!result.canceled) setSelectedUri(result.assets[0].uri);
+    const result = await ImagePicker.launchCameraAsync({ mediaTypes: 'images', quality: 0.9, exif: true });
+    if (!result.canceled) {
+      const a = result.assets[0];
+      setSelectedAssets((prev) => [
+        ...prev,
+        { uri: a.uri, takenAt: parseExifDate(a.exif?.DateTimeOriginal ?? a.exif?.DateTime) },
+      ]);
+    }
   }
 
   async function handleLibrary() {
@@ -58,12 +74,27 @@ export default function AddScreen() {
       Alert.alert('Permission required', 'Photo library access is needed to select photos.');
       return;
     }
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: 'images', quality: 0.9 });
-    if (!result.canceled) setSelectedUri(result.assets[0].uri);
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: 'images',
+      quality: 0.9,
+      allowsMultipleSelection: true,
+      exif: true,
+    });
+    if (!result.canceled) {
+      const assets = result.assets.map((a) => ({
+        uri: a.uri,
+        takenAt: parseExifDate(a.exif?.DateTimeOriginal ?? a.exif?.DateTime),
+      }));
+      setSelectedAssets((prev) => [...prev, ...assets]);
+    }
+  }
+
+  function removeAsset(index: number) {
+    setSelectedAssets((prev) => prev.filter((_, i) => i !== index));
   }
 
   async function handleSave() {
-    if (!selectedUri) return;
+    if (selectedAssets.length === 0) return;
     setSaving(true);
     try {
       let categoryId = selectedCategoryId;
@@ -76,7 +107,7 @@ export default function AddScreen() {
         setSaving(false);
         return;
       }
-      await addPhoto(selectedUri, categoryId);
+      await addPhotos(selectedAssets, categoryId);
       reset();
       router.push(`/category/${categoryId}`);
     } catch {
@@ -87,7 +118,7 @@ export default function AddScreen() {
   }
 
   function reset() {
-    setSelectedUri(null);
+    setSelectedAssets([]);
     setSelectedCategoryId(null);
     setShowNewCategory(false);
     setNewCategoryName('');
@@ -97,7 +128,8 @@ export default function AddScreen() {
   const hasCategory =
     selectedCategoryId != null || (showNewCategory && newCategoryName.trim().length > 0);
 
-  const canSave = selectedUri != null && hasCategory;
+  const canSave = selectedAssets.length > 0 && hasCategory;
+  const photoCount = selectedAssets.length;
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
@@ -206,12 +238,44 @@ export default function AddScreen() {
 
             {/* ── Photo ── */}
             <Text style={[styles.sectionTitle, { color: colors.text }]}>Photo</Text>
-            {selectedUri ? (
-              <Animated.View entering={FadeIn.duration(350)} style={styles.previewContainer}>
-                <Image source={{ uri: selectedUri }} style={styles.preview} contentFit="cover" />
-                <Pressable style={styles.changePhotoBtn} onPress={() => setSelectedUri(null)}>
-                  <MaterialIcons name="close" size={18} color="#fff" />
-                </Pressable>
+            {selectedAssets.length > 0 ? (
+              <Animated.View entering={FadeIn.duration(350)} style={{ marginHorizontal: 16 }}>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.thumbRow}
+                >
+                  {selectedAssets.map((asset, i) => (
+                    <View key={`${asset.uri}-${i}`} style={styles.thumbWrapper}>
+                      <Image source={{ uri: asset.uri }} style={styles.thumbImg} contentFit="cover" />
+                      <Pressable style={styles.thumbRemove} onPress={() => removeAsset(i)}>
+                        <MaterialIcons name="close" size={14} color="#fff" />
+                      </Pressable>
+                    </View>
+                  ))}
+                </ScrollView>
+                <View style={styles.addMoreRow}>
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.addMoreBtn,
+                      { backgroundColor: colors.card, borderColor: colors.border, opacity: pressed ? 0.7 : 1 },
+                    ]}
+                    onPress={handleCamera}
+                  >
+                    <MaterialIcons name="camera-alt" size={18} color={colors.tint} />
+                    <Text style={[styles.addMoreText, { color: colors.text }]}>Camera</Text>
+                  </Pressable>
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.addMoreBtn,
+                      { backgroundColor: colors.card, borderColor: colors.border, opacity: pressed ? 0.7 : 1 },
+                    ]}
+                    onPress={handleLibrary}
+                  >
+                    <MaterialIcons name="add-photo-alternate" size={18} color={colors.tint} />
+                    <Text style={[styles.addMoreText, { color: colors.text }]}>Add More</Text>
+                  </Pressable>
+                </View>
               </Animated.View>
             ) : (
               <View style={styles.pickRow}>
@@ -239,7 +303,7 @@ export default function AddScreen() {
             )}
 
             {/* ── Save ── */}
-            {selectedUri && !hasCategory && (
+            {selectedAssets.length > 0 && !hasCategory && (
               <Animated.View entering={FadeIn.duration(300)} style={[styles.hint, { backgroundColor: colors.tintSubtle }]}>
                 <MaterialIcons name="info-outline" size={14} color={colors.tint} />
                 <Text style={[styles.hintText, { color: colors.tint }]}>Select or create a category above to save</Text>
@@ -257,7 +321,9 @@ export default function AddScreen() {
               {saving ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text style={styles.saveButtonText}>Save Photo</Text>
+                <Text style={styles.saveButtonText}>
+                  {photoCount > 1 ? `Save ${photoCount} Photos` : 'Save Photo'}
+                </Text>
               )}
             </Pressable>
 
@@ -388,23 +454,47 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
   },
-  previewContainer: {
-    marginHorizontal: 16,
-    borderRadius: 16,
+  thumbRow: {
+    gap: 8,
+    paddingVertical: 4,
+  },
+  thumbWrapper: {
+    width: 96,
+    height: 96,
+    borderRadius: 12,
     overflow: 'hidden',
     position: 'relative',
   },
-  preview: {
+  thumbImg: {
     width: '100%',
-    aspectRatio: 4 / 3,
+    height: '100%',
   },
-  changePhotoBtn: {
+  thumbRemove: {
     position: 'absolute',
-    top: 10,
-    right: 10,
+    top: 5,
+    right: 5,
     backgroundColor: 'rgba(0,0,0,0.5)',
-    borderRadius: 20,
-    padding: 6,
+    borderRadius: 10,
+    padding: 3,
+  },
+  addMoreRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 10,
+  },
+  addMoreBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    gap: 6,
+  },
+  addMoreText: {
+    fontSize: 14,
+    fontWeight: '500',
   },
   saveButton: {
     margin: 16,

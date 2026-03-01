@@ -23,7 +23,8 @@ type PhotosContextType = {
   loading: boolean;
   addCategory: (name: string, icon?: string) => Promise<Category>;
   updateCategory: (id: string, updates: { name?: string; icon?: string }) => Promise<void>;
-  addPhoto: (uri: string, categoryId: string) => Promise<Photo>;
+  addPhoto: (uri: string, categoryId: string, takenAt?: string) => Promise<Photo>;
+  addPhotos: (assets: { uri: string; takenAt?: string }[], categoryId: string) => Promise<Photo[]>;
   deletePhoto: (id: string) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
   getPhotosByCategory: (categoryId: string) => Photo[];
@@ -85,23 +86,42 @@ export function PhotosProvider({ children }: { children: React.ReactNode }) {
     await AsyncStorage.setItem(CATEGORIES_KEY, JSON.stringify(updated));
   }, [categories]);
 
-  const addPhoto = useCallback(async (uri: string, categoryId: string): Promise<Photo> => {
+  const addPhoto = useCallback(async (uri: string, categoryId: string, takenAt?: string): Promise<Photo> => {
     const dir = `${FileSystem.documentDirectory}photos/`;
     await FileSystem.makeDirectoryAsync(dir, { intermediates: true });
-    const filename = `${Date.now()}.jpg`;
-    const dest = `${dir}${filename}`;
+    const id = `${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+    const dest = `${dir}${id}.jpg`;
     await FileSystem.copyAsync({ from: uri, to: dest });
 
     const photo: Photo = {
-      id: Date.now().toString(),
+      id,
       uri: dest,
       categoryId,
-      takenAt: new Date().toISOString(),
+      takenAt: takenAt ?? new Date().toISOString(),
     };
     const updated = [...photos, photo];
     setPhotos(updated);
     await AsyncStorage.setItem(PHOTOS_KEY, JSON.stringify(updated));
     return photo;
+  }, [photos]);
+
+  const addPhotos = useCallback(async (
+    assets: { uri: string; takenAt?: string }[],
+    categoryId: string,
+  ): Promise<Photo[]> => {
+    const dir = `${FileSystem.documentDirectory}photos/`;
+    await FileSystem.makeDirectoryAsync(dir, { intermediates: true });
+    const newPhotos: Photo[] = [];
+    for (const asset of assets) {
+      const id = `${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+      const dest = `${dir}${id}.jpg`;
+      await FileSystem.copyAsync({ from: asset.uri, to: dest });
+      newPhotos.push({ id, uri: dest, categoryId, takenAt: asset.takenAt ?? new Date().toISOString() });
+    }
+    const updated = [...photos, ...newPhotos];
+    setPhotos(updated);
+    await AsyncStorage.setItem(PHOTOS_KEY, JSON.stringify(updated));
+    return newPhotos;
   }, [photos]);
 
   const deletePhoto = useCallback(async (id: string) => {
@@ -151,6 +171,7 @@ export function PhotosProvider({ children }: { children: React.ReactNode }) {
         addCategory,
         updateCategory,
         addPhoto,
+        addPhotos,
         deletePhoto,
         deleteCategory,
         getPhotosByCategory,
