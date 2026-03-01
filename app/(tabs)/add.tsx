@@ -74,18 +74,23 @@ export default function AddScreen() {
       setModal({ title: 'Permission Required', message: 'Photo library access is needed to select photos.' });
       return;
     }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: 'images',
-      quality: 0.9,
-      allowsMultipleSelection: true,
-      exif: true,
-    });
-    if (!result.canceled) {
-      const assets = result.assets.map((a) => ({
-        uri: a.uri,
-        takenAt: parseExifDate(a.exif?.DateTimeOriginal ?? a.exif?.DateTime),
-      }));
-      setSelectedAssets((prev) => [...prev, ...assets]);
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: 'images',
+        quality: 0.9,
+        allowsMultipleSelection: true,
+        // exif reading on Android fails for cloud-only Google Photos URIs
+        exif: Platform.OS !== 'android',
+      });
+      if (!result.canceled) {
+        const assets = result.assets.map((a) => ({
+          uri: a.uri,
+          takenAt: parseExifDate(a.exif?.DateTimeOriginal ?? a.exif?.DateTime),
+        }));
+        setSelectedAssets((prev) => [...prev, ...assets]);
+      }
+    } catch {
+      setModal({ title: 'Error', message: 'Could not load the selected photos. Try selecting from the main library view instead of an album.' });
     }
   }
 

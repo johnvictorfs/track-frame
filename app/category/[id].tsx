@@ -2,10 +2,11 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import { useRef, useState } from 'react';
+import { useRef, useState, useCallback } from 'react';
 import {
   Dimensions,
   FlatList,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -15,6 +16,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import AppModal, { ModalConfig } from '@/components/AppModal';
 import { usePhotosContext } from '@/context/photos-context';
+import { useSettings } from '@/context/settings-context';
 import { useTheme } from '@/hooks/use-theme';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -30,8 +32,8 @@ export default function CategoryScreen() {
   const id = idRef.current;
   const { getCategoryById, getPhotosByCategory, addPhoto, addPhotos, deleteCategory } = usePhotosContext();
   const { colors } = useTheme();
+  const { sortOrder, setSortOrder } = useSettings();
   const insets = useSafeAreaInsets();
-  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
   const [modal, setModal] = useState<ModalConfig | null>(null);
 
   const category = getCategoryById(id);
@@ -93,20 +95,25 @@ export default function CategoryScreen() {
               setModal({ title: 'Permission Required', message: 'Photo library access is needed.' });
               return;
             }
-            const result = await ImagePicker.launchImageLibraryAsync({
-              mediaTypes: 'images',
-              quality: 0.9,
-              allowsMultipleSelection: true,
-              exif: true,
-            });
-            if (!result.canceled) {
-              await addPhotos(
-                result.assets.map((a) => ({
-                  uri: a.uri,
-                  takenAt: parseExifDate(a.exif?.DateTimeOriginal ?? a.exif?.DateTime),
-                })),
-                id,
-              );
+            try {
+              const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: 'images',
+                quality: 0.9,
+                allowsMultipleSelection: true,
+                // exif reading on Android fails for cloud-only Google Photos URIs
+                exif: Platform.OS !== 'android',
+              });
+              if (!result.canceled) {
+                await addPhotos(
+                  result.assets.map((a) => ({
+                    uri: a.uri,
+                    takenAt: parseExifDate(a.exif?.DateTimeOriginal ?? a.exif?.DateTime),
+                  })),
+                  id,
+                );
+              }
+            } catch {
+              setModal({ title: 'Error', message: 'Could not load the selected photos. Try selecting from the main library view instead of an album.' });
             }
           },
         },
@@ -114,6 +121,10 @@ export default function CategoryScreen() {
       ],
     });
   }
+
+  const toggleSort = useCallback(() => {
+    setSortOrder(sortOrder === 'newest' ? 'oldest' : 'newest');
+  }, [sortOrder, setSortOrder]);
 
   function formatDate(iso: string) {
     return new Date(iso).toLocaleDateString('en-US', {
@@ -144,16 +155,6 @@ export default function CategoryScreen() {
           headerShadowVisible: false,
           headerRight: () => (
             <View style={{ flexDirection: 'row', gap: 16 }}>
-              <Pressable
-                onPress={() => setSortOrder((o) => (o === 'newest' ? 'oldest' : 'newest'))}
-                hitSlop={12}
-              >
-                <MaterialIcons
-                  name={sortOrder === 'newest' ? 'arrow-downward' : 'arrow-upward'}
-                  size={22}
-                  color={colors.text}
-                />
-              </Pressable>
               <Pressable onPress={() => router.push(`/category-edit/${id}`)} hitSlop={12}>
                 <MaterialIcons name="edit" size={22} color={colors.text} />
               </Pressable>
@@ -181,6 +182,25 @@ export default function CategoryScreen() {
           columnWrapperStyle={styles.row}
           contentContainerStyle={styles.grid}
           showsVerticalScrollIndicator={false}
+          ListHeaderComponent={
+            <Pressable
+              onPress={toggleSort}
+              style={({ pressed }) => [
+                styles.sortBar,
+                { backgroundColor: colors.tintSubtle, opacity: pressed ? 0.7 : 1 },
+              ]}
+            >
+              <MaterialIcons name="event" size={14} color={colors.tint} />
+              <Text style={[styles.sortBarText, { color: colors.tint }]}>
+                {sortOrder === 'newest' ? 'Newest first' : 'Oldest first'}
+              </Text>
+              <MaterialIcons
+                name={sortOrder === 'newest' ? 'arrow-downward' : 'arrow-upward'}
+                size={14}
+                color={colors.tint}
+              />
+            </Pressable>
+          }
           renderItem={({ item }) => (
             <View style={styles.photoItem}>
               <Pressable onPress={() => router.push(`/photo/${item.id}?categoryId=${id}`)}>
@@ -236,6 +256,20 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: 'center',
     marginTop: 5,
+  },
+  sortBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-end',
+    gap: 5,
+    paddingHorizontal: 11,
+    paddingVertical: 6,
+    borderRadius: 20,
+    marginBottom: 10,
+  },
+  sortBarText: {
+    fontSize: 13,
+    fontWeight: '500',
   },
   empty: {
     flex: 1,
