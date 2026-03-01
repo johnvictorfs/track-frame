@@ -50,7 +50,6 @@ jobs:
             --ks release.jks \
             --ks-key-alias "${{ secrets.KEY_ALIAS }}" \
             --ks-pass "pass:${{ secrets.KEY_STORE_PASSWORD }}" \
-            --key-pass "pass:${{ secrets.KEY_PASSWORD }}" \
             --out track-frame-${{ github.ref_name }}.apk \
             android/app/build/outputs/apk/release/app-release-unsigned.apk
 
