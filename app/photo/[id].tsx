@@ -1,6 +1,7 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Image } from 'expo-image';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
+import * as Sharing from 'expo-sharing';
 import { useCallback, useRef, useState } from 'react';
 import {
   Dimensions,
@@ -73,6 +74,17 @@ export default function PhotoScreen() {
     },
     []
   );
+
+  async function handleShare() {
+    if (!currentPhoto) return;
+    const available = await Sharing.isAvailableAsync();
+    if (!available) return;
+    try {
+      await Sharing.shareAsync(currentPhoto.uri);
+    } catch {
+      // dismissed or another share in progress — ignore
+    }
+  }
 
   function handleRemove() {
     if (!currentPhoto) return;
@@ -177,10 +189,16 @@ export default function PhotoScreen() {
             </Pressable>
           </View>
         )}
-        <Pressable style={styles.removeBtn} onPress={handleRemove}>
-          <MaterialIcons name="remove-circle-outline" size={22} color="#ff4444" />
-          <Text style={styles.removeBtnText}>Remove from Tracking</Text>
-        </Pressable>
+        <View style={styles.actionRow}>
+          <Pressable style={styles.shareBtn} onPress={handleShare}>
+            <MaterialIcons name="share" size={22} color="#fff" />
+            <Text style={styles.shareBtnText}>Share</Text>
+          </Pressable>
+          <Pressable style={styles.removeBtn} onPress={handleRemove}>
+            <MaterialIcons name="remove-circle-outline" size={22} color="#ff4444" />
+            <Text style={styles.removeBtnText}>Remove</Text>
+          </Pressable>
+        </View>
       </View>
       <AppModal
         visible={!!modal}
@@ -212,15 +230,37 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: 'rgba(255,255,255,0.5)',
   },
-  removeBtn: {
+  actionRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 10,
+  },
+  shareBtn: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
     paddingVertical: 12,
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
     borderRadius: 12,
     backgroundColor: '#1a1a1a',
-    marginTop: 10,
+  },
+  shareBtnText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  removeBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    backgroundColor: '#1a1a1a',
   },
   removeBtnText: {
     color: '#ff4444',
