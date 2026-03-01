@@ -94,9 +94,10 @@ export default function AddScreen() {
     setNewCategoryIcon(undefined);
   }
 
-  const canSave =
-    selectedUri != null &&
-    (selectedCategoryId != null || (showNewCategory && newCategoryName.trim().length > 0));
+  const hasCategory =
+    selectedCategoryId != null || (showNewCategory && newCategoryName.trim().length > 0);
+
+  const canSave = selectedUri != null && hasCategory;
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
@@ -238,6 +239,12 @@ export default function AddScreen() {
             )}
 
             {/* ── Save ── */}
+            {selectedUri && !hasCategory && (
+              <Animated.View entering={FadeIn.duration(300)} style={[styles.hint, { backgroundColor: colors.tintSubtle }]}>
+                <MaterialIcons name="info-outline" size={14} color={colors.tint} />
+                <Text style={[styles.hintText, { color: colors.tint }]}>Select or create a category above to save</Text>
+              </Animated.View>
+            )}
             <Pressable
               style={[
                 styles.saveButton,
@@ -414,6 +421,20 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 17,
     fontWeight: '600',
+  },
+  hint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginHorizontal: 16,
+    marginTop: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 10,
+  },
+  hintText: {
+    fontSize: 13,
+    fontWeight: '500',
   },
   privacyNotice: {
     flexDirection: 'row',
