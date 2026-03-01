@@ -28,7 +28,7 @@ export default function CategoryScreen() {
   const idRef = useRef(paramId ?? '');
   if (paramId) idRef.current = paramId;
   const id = idRef.current;
-  const { getCategoryById, getPhotosByCategory, addPhoto, deleteCategory } = usePhotosContext();
+  const { getCategoryById, getPhotosByCategory, addPhoto, addPhotos, deleteCategory } = usePhotosContext();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
@@ -58,6 +58,13 @@ export default function CategoryScreen() {
     );
   }
 
+  function parseExifDate(raw?: string | null): string | undefined {
+    if (!raw) return undefined;
+    const normalized = raw.replace(/^(\d{4}):(\d{2}):(\d{2})/, '$1-$2-$3');
+    const d = new Date(normalized);
+    return isNaN(d.getTime()) ? undefined : d.toISOString();
+  }
+
   async function handleAddPhoto() {
     Alert.alert('Add Photo', 'Choose source', [
       {
@@ -68,8 +75,11 @@ export default function CategoryScreen() {
             Alert.alert('Permission required', 'Camera access is needed.');
             return;
           }
-          const result = await ImagePicker.launchCameraAsync({ mediaTypes: 'images', quality: 0.9 });
-          if (!result.canceled) await addPhoto(result.assets[0].uri, id);
+          const result = await ImagePicker.launchCameraAsync({ mediaTypes: 'images', quality: 0.9, exif: true });
+          if (!result.canceled) {
+            const a = result.assets[0];
+            await addPhoto(a.uri, id, parseExifDate(a.exif?.DateTimeOriginal ?? a.exif?.DateTime));
+          }
         },
       },
       {
@@ -80,8 +90,21 @@ export default function CategoryScreen() {
             Alert.alert('Permission required', 'Photo library access is needed.');
             return;
           }
-          const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: 'images', quality: 0.9 });
-          if (!result.canceled) await addPhoto(result.assets[0].uri, id);
+          const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: 'images',
+            quality: 0.9,
+            allowsMultipleSelection: true,
+            exif: true,
+          });
+          if (!result.canceled) {
+            await addPhotos(
+              result.assets.map((a) => ({
+                uri: a.uri,
+                takenAt: parseExifDate(a.exif?.DateTimeOriginal ?? a.exif?.DateTime),
+              })),
+              id,
+            );
+          }
         },
       },
       { text: 'Cancel', style: 'cancel' },
