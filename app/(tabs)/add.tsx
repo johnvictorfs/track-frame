@@ -253,6 +253,13 @@ export default function AddScreen() {
                 <Text style={styles.saveButtonText}>Save Photo</Text>
               )}
             </Pressable>
+
+            <View style={styles.privacyNotice}>
+              <MaterialIcons name="lock" size={13} color={colors.subtext} style={{ marginTop: 1 }} />
+              <Text style={[styles.privacyNoticeText, { color: colors.subtext }]}>
+                Your photos never leave your device — stored locally, never uploaded.
+              </Text>
+            </View>
           </ScrollView>
         </Animated.View>
       </KeyboardAvoidingView>
@@ -407,5 +414,18 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 17,
     fontWeight: '600',
+  },
+  privacyNotice: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+    gap: 5,
+    marginTop: -8,
+    marginBottom: 32,
+    paddingHorizontal: 24,
+  },
+  privacyNoticeText: {
+    fontSize: 12,
+    textAlign: 'center',
   },
 });
