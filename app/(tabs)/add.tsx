@@ -3,6 +3,7 @@ import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { router, useLocalSearchParams } from 'expo-router';
 import Animated, { FadeIn } from 'react-native-reanimated';
+import TabScreenWrapper from '@/components/tab-screen-wrapper';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -132,9 +133,10 @@ export default function AddScreen() {
   const photoCount = selectedAssets.length;
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
-        <Animated.View style={{ flex: 1 }} entering={FadeIn.duration(300)}>
+    <TabScreenWrapper>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+          <Animated.View style={{ flex: 1 }}>
           <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
             <Text style={[styles.title, { color: colors.text }]}>Add Photo</Text>
 
@@ -333,10 +335,11 @@ export default function AddScreen() {
                 Your photos never leave your device — stored locally, never uploaded.
               </Text>
             </View>
-          </ScrollView>
-        </Animated.View>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+            </ScrollView>
+          </Animated.View>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </TabScreenWrapper>
   );
 }
 

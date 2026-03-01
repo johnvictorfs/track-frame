@@ -2,6 +2,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useState } from 'react';
+import TabScreenWrapper from '@/components/tab-screen-wrapper';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import {
   ActivityIndicator,
@@ -223,25 +224,27 @@ export default function GalleryScreen() {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>TrackFrame</Text>
-      </View>
-      {categories.length === 0 ? (
-        <Onboarding />
-      ) : (
-        <FlatList
-          data={categories}
-          keyExtractor={(item) => item.id}
-          renderItem={renderCategory}
-          ListFooterComponent={NewCategoryFooter}
-          ListFooterComponentStyle={styles.listFooter}
-          contentContainerStyle={styles.list}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        />
-      )}
-    </SafeAreaView>
+    <TabScreenWrapper>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+        <View style={styles.header}>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>TrackFrame</Text>
+        </View>
+        {categories.length === 0 ? (
+          <Onboarding />
+        ) : (
+          <FlatList
+            data={categories}
+            keyExtractor={(item) => item.id}
+            renderItem={renderCategory}
+            ListFooterComponent={NewCategoryFooter}
+            ListFooterComponentStyle={styles.listFooter}
+            contentContainerStyle={styles.list}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          />
+        )}
+      </SafeAreaView>
+    </TabScreenWrapper>
   );
 }
 

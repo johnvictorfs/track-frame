@@ -1,6 +1,7 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import TabScreenWrapper from '@/components/tab-screen-wrapper';
 
 import { ThemePreference, useSettings } from '@/context/settings-context';
 import { useTheme } from '@/hooks/use-theme';
@@ -18,68 +19,70 @@ export default function SettingsScreen() {
   const { colors } = useTheme();
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Settings</Text>
-      </View>
+    <TabScreenWrapper>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+        <View style={styles.header}>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Settings</Text>
+        </View>
 
-      <View style={styles.section}>
-        <Text style={[styles.sectionLabel, { color: colors.subtext }]}>APPEARANCE</Text>
-        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <Text style={[styles.rowTitle, { color: colors.text }]}>Theme</Text>
-          <Text style={[styles.rowSubtitle, { color: colors.subtext }]}>
-            Choose how TrackFrame looks
-          </Text>
-          <View style={styles.optionsRow}>
-            {THEME_OPTIONS.map((opt) => {
-              const selected = themePreference === opt.value;
-              return (
-                <Pressable
-                  key={opt.value}
-                  style={({ pressed }) => [
-                    styles.option,
-                    { borderColor: selected ? colors.tint : colors.border, opacity: pressed ? 0.75 : 1 },
-                    selected && { backgroundColor: colors.tintSubtle },
-                  ]}
-                  onPress={() => setThemePreference(opt.value)}
-                >
-                  <MaterialIcons
-                    name={opt.icon as any}
-                    size={24}
-                    color={selected ? colors.tint : colors.subtext}
-                  />
-                  <Text
-                    style={[
-                      styles.optionLabel,
-                      { color: selected ? colors.tint : colors.subtext },
+        <View style={styles.section}>
+          <Text style={[styles.sectionLabel, { color: colors.subtext }]}>APPEARANCE</Text>
+          <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <Text style={[styles.rowTitle, { color: colors.text }]}>Theme</Text>
+            <Text style={[styles.rowSubtitle, { color: colors.subtext }]}>
+              Choose how TrackFrame looks
+            </Text>
+            <View style={styles.optionsRow}>
+              {THEME_OPTIONS.map((opt) => {
+                const selected = themePreference === opt.value;
+                return (
+                  <Pressable
+                    key={opt.value}
+                    style={({ pressed }) => [
+                      styles.option,
+                      { borderColor: selected ? colors.tint : colors.border, opacity: pressed ? 0.75 : 1 },
+                      selected && { backgroundColor: colors.tintSubtle },
                     ]}
+                    onPress={() => setThemePreference(opt.value)}
                   >
-                    {opt.label}
-                  </Text>
-                  {selected && (
-                    <MaterialIcons name="check-circle" size={16} color={colors.tint} />
-                  )}
-                </Pressable>
-              );
-            })}
+                    <MaterialIcons
+                      name={opt.icon as any}
+                      size={24}
+                      color={selected ? colors.tint : colors.subtext}
+                    />
+                    <Text
+                      style={[
+                        styles.optionLabel,
+                        { color: selected ? colors.tint : colors.subtext },
+                      ]}
+                    >
+                      {opt.label}
+                    </Text>
+                    {selected && (
+                      <MaterialIcons name="check-circle" size={16} color={colors.tint} />
+                    )}
+                  </Pressable>
+                );
+              })}
+            </View>
           </View>
         </View>
-      </View>
 
-      <View style={[styles.section, { marginTop: 24 }]}>
-        <Text style={[styles.sectionLabel, { color: colors.subtext }]}>ABOUT</Text>
-        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <Pressable
-            style={({ pressed }) => [styles.linkRow, { opacity: pressed ? 0.6 : 1 }]}
-            onPress={() => Linking.openURL('https://github.com/johnvictorfs/track-frame/')}
-          >
-            <MaterialIcons name="code" size={20} color={colors.tint} />
-            <Text style={[styles.linkText, { color: colors.tint }]}>Source Code</Text>
-            <MaterialIcons name="open-in-new" size={16} color={colors.subtext} style={{ marginLeft: 'auto' }} />
-          </Pressable>
+        <View style={[styles.section, { marginTop: 24 }]}>
+          <Text style={[styles.sectionLabel, { color: colors.subtext }]}>ABOUT</Text>
+          <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <Pressable
+              style={({ pressed }) => [styles.linkRow, { opacity: pressed ? 0.6 : 1 }]}
+              onPress={() => Linking.openURL('https://github.com/johnvictorfs/track-frame/')}
+            >
+              <MaterialIcons name="code" size={20} color={colors.tint} />
+              <Text style={[styles.linkText, { color: colors.tint }]}>Source Code</Text>
+              <MaterialIcons name="open-in-new" size={16} color={colors.subtext} style={{ marginLeft: 'auto' }} />
+            </Pressable>
+          </View>
         </View>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </TabScreenWrapper>
   );
 }
 
