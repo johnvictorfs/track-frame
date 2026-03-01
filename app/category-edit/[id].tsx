@@ -2,7 +2,6 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -14,6 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import AppModal, { ModalConfig } from '@/components/AppModal';
 import CategoryIconPicker from '@/components/CategoryIconPicker';
 import { usePhotosContext } from '@/context/photos-context';
 import { useTheme } from '@/hooks/use-theme';
@@ -30,6 +30,7 @@ export default function CategoryEditScreen() {
 
   const [name, setName] = useState(category?.name ?? '');
   const [icon, setIcon] = useState<string | undefined>(category?.icon);
+  const [modal, setModal] = useState<ModalConfig | null>(null);
 
   useEffect(() => {
     if (category) {
@@ -41,7 +42,7 @@ export default function CategoryEditScreen() {
   async function handleSave() {
     const trimmed = name.trim();
     if (!trimmed) {
-      Alert.alert('Name required', 'Please enter a category name.');
+      setModal({ title: 'Name Required', message: 'Please enter a category name.' });
       return;
     }
     await updateCategory(id, { name: trimmed, icon });
@@ -124,6 +125,11 @@ export default function CategoryEditScreen() {
           </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
+      <AppModal
+        visible={!!modal}
+        {...(modal ?? { title: '' })}
+        onDismiss={() => setModal(null)}
+      />
     </SafeAreaView>
   );
 }

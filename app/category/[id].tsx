@@ -4,7 +4,6 @@ import * as ImagePicker from 'expo-image-picker';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useRef, useState } from 'react';
 import {
-  Alert,
   Dimensions,
   FlatList,
   Pressable,
@@ -14,6 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import AppModal, { ModalConfig } from '@/components/AppModal';
 import { usePhotosContext } from '@/context/photos-context';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -32,6 +32,7 @@ export default function CategoryScreen() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
+  const [modal, setModal] = useState<ModalConfig | null>(null);
 
   const category = getCategoryById(id);
   const rawPhotos = getPhotosByCategory(id);
@@ -41,10 +42,10 @@ export default function CategoryScreen() {
   });
 
   function handleDeleteCategory() {
-    Alert.alert(
-      'Delete Category',
-      `Delete "${category?.name}" and all its photos? This cannot be undone.`,
-      [
+    setModal({
+      title: 'Delete Category',
+      message: `Delete "${category?.name}" and all its photos? This cannot be undone.`,
+      buttons: [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Delete',
@@ -55,7 +56,7 @@ export default function CategoryScreen() {
           },
         },
       ],
-    );
+    });
   }
 
   function parseExifDate(raw?: string | null): string | undefined {
@@ -66,49 +67,52 @@ export default function CategoryScreen() {
   }
 
   async function handleAddPhoto() {
-    Alert.alert('Add Photo', 'Choose source', [
-      {
-        text: 'Camera',
-        onPress: async () => {
-          const { status } = await ImagePicker.requestCameraPermissionsAsync();
-          if (status !== 'granted') {
-            Alert.alert('Permission required', 'Camera access is needed.');
-            return;
-          }
-          const result = await ImagePicker.launchCameraAsync({ mediaTypes: 'images', quality: 0.9, exif: true });
-          if (!result.canceled) {
-            const a = result.assets[0];
-            await addPhoto(a.uri, id, parseExifDate(a.exif?.DateTimeOriginal ?? a.exif?.DateTime));
-          }
+    setModal({
+      title: 'Add Photo',
+      buttons: [
+        {
+          text: 'Camera',
+          onPress: async () => {
+            const { status } = await ImagePicker.requestCameraPermissionsAsync();
+            if (status !== 'granted') {
+              setModal({ title: 'Permission Required', message: 'Camera access is needed.' });
+              return;
+            }
+            const result = await ImagePicker.launchCameraAsync({ mediaTypes: 'images', quality: 0.9, exif: true });
+            if (!result.canceled) {
+              const a = result.assets[0];
+              await addPhoto(a.uri, id, parseExifDate(a.exif?.DateTimeOriginal ?? a.exif?.DateTime));
+            }
+          },
         },
-      },
-      {
-        text: 'Library',
-        onPress: async () => {
-          const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-          if (status !== 'granted') {
-            Alert.alert('Permission required', 'Photo library access is needed.');
-            return;
-          }
-          const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: 'images',
-            quality: 0.9,
-            allowsMultipleSelection: true,
-            exif: true,
-          });
-          if (!result.canceled) {
-            await addPhotos(
-              result.assets.map((a) => ({
-                uri: a.uri,
-                takenAt: parseExifDate(a.exif?.DateTimeOriginal ?? a.exif?.DateTime),
-              })),
-              id,
-            );
-          }
+        {
+          text: 'Library',
+          onPress: async () => {
+            const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+            if (status !== 'granted') {
+              setModal({ title: 'Permission Required', message: 'Photo library access is needed.' });
+              return;
+            }
+            const result = await ImagePicker.launchImageLibraryAsync({
+              mediaTypes: 'images',
+              quality: 0.9,
+              allowsMultipleSelection: true,
+              exif: true,
+            });
+            if (!result.canceled) {
+              await addPhotos(
+                result.assets.map((a) => ({
+                  uri: a.uri,
+                  takenAt: parseExifDate(a.exif?.DateTimeOriginal ?? a.exif?.DateTime),
+                })),
+                id,
+              );
+            }
+          },
         },
-      },
-      { text: 'Cancel', style: 'cancel' },
-    ]);
+        { text: 'Cancel', style: 'cancel' },
+      ],
+    });
   }
 
   function formatDate(iso: string) {
@@ -198,6 +202,12 @@ export default function CategoryScreen() {
           <MaterialIcons name="add" size={30} color="#fff" />
         </Pressable>
       </View>
+
+      <AppModal
+        visible={!!modal}
+        {...(modal ?? { title: '' })}
+        onDismiss={() => setModal(null)}
+      />
     </SafeAreaView>
   );
 }

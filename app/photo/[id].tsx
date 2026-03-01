@@ -3,7 +3,6 @@ import { Image } from 'expo-image';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import {
-  Alert,
   Dimensions,
   FlatList,
   Pressable,
@@ -14,6 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import AppModal, { ModalConfig } from '@/components/AppModal';
 import { usePhotosContext } from '@/context/photos-context';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -42,6 +42,7 @@ export default function PhotoScreen() {
   const initialIndex = Math.max(0, categoryPhotos.findIndex((p) => p.id === id));
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [listHeight, setListHeight] = useState(0);
+  const [modal, setModal] = useState<ModalConfig | null>(null);
   const flatListRef = useRef<FlatList>(null);
 
   const currentPhoto = categoryPhotos[currentIndex] ?? categoryPhotos[0];
@@ -75,10 +76,10 @@ export default function PhotoScreen() {
 
   function handleRemove() {
     if (!currentPhoto) return;
-    Alert.alert(
-      'Remove Photo',
-      'This will remove the photo from your progress tracking. The original file on your device will not be affected.',
-      [
+    setModal({
+      title: 'Remove Photo',
+      message: 'This will remove the photo from your progress tracking. The original file on your device will not be affected.',
+      buttons: [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Remove',
@@ -96,8 +97,8 @@ export default function PhotoScreen() {
             flatListRef.current?.scrollToIndex({ index: targetIndex, animated: false });
           },
         },
-      ]
-    );
+      ],
+    });
   }
 
   if (categoryPhotos.length === 0) {
@@ -161,6 +162,11 @@ export default function PhotoScreen() {
           <Text style={styles.removeBtnText}>Remove from Tracking</Text>
         </Pressable>
       </View>
+      <AppModal
+        visible={!!modal}
+        {...(modal ?? { title: '' })}
+        onDismiss={() => setModal(null)}
+      />
     </SafeAreaView>
   );
 }

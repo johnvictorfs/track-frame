@@ -7,7 +7,6 @@ import TabScreenWrapper from '@/components/tab-screen-wrapper';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -19,6 +18,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import AppModal, { ModalConfig } from '@/components/AppModal';
 import CategoryIconPicker from '@/components/CategoryIconPicker';
 import { CATEGORY_SUGGESTIONS } from '@/constants/category-suggestions';
 import { usePhotosContext } from '@/context/photos-context';
@@ -45,6 +45,7 @@ export default function AddScreen() {
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryIcon, setNewCategoryIcon] = useState<string | undefined>(undefined);
   const [saving, setSaving] = useState(false);
+  const [modal, setModal] = useState<ModalConfig | null>(null);
 
   useEffect(() => {
     if (preselectedCategoryId) {
@@ -56,7 +57,7 @@ export default function AddScreen() {
   async function handleCamera() {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission required', 'Camera access is needed to take photos.');
+      setModal({ title: 'Permission Required', message: 'Camera access is needed to take photos.' });
       return;
     }
     const result = await ImagePicker.launchCameraAsync({ mediaTypes: 'images', quality: 0.9, exif: true });
@@ -72,7 +73,7 @@ export default function AddScreen() {
   async function handleLibrary() {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission required', 'Photo library access is needed to select photos.');
+      setModal({ title: 'Permission Required', message: 'Photo library access is needed to select photos.' });
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -104,7 +105,7 @@ export default function AddScreen() {
         categoryId = category.id;
       }
       if (!categoryId) {
-        Alert.alert('Select a category', 'Please select or create a category first.');
+        setModal({ title: 'Select a Category', message: 'Please select or create a category first.' });
         setSaving(false);
         return;
       }
@@ -112,7 +113,7 @@ export default function AddScreen() {
       reset();
       router.push(`/category/${categoryId}`);
     } catch {
-      Alert.alert('Error', 'Failed to save photo. Please try again.');
+      setModal({ title: 'Error', message: 'Failed to save photo. Please try again.' });
     } finally {
       setSaving(false);
     }
@@ -339,6 +340,11 @@ export default function AddScreen() {
           </Animated.View>
         </KeyboardAvoidingView>
       </SafeAreaView>
+      <AppModal
+        visible={!!modal}
+        {...(modal ?? { title: '' })}
+        onDismiss={() => setModal(null)}
+      />
     </TabScreenWrapper>
   );
 }

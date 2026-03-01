@@ -6,7 +6,6 @@ import TabScreenWrapper from '@/components/tab-screen-wrapper';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   Pressable,
   ScrollView,
@@ -17,6 +16,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import AppModal, { ModalConfig } from '@/components/AppModal';
 import CategoryIconPicker from '@/components/CategoryIconPicker';
 import { CATEGORY_SUGGESTIONS } from '@/constants/category-suggestions';
 import { Category, usePhotosContext } from '@/context/photos-context';
@@ -152,6 +152,7 @@ function NewCategoryFooter() {
 export default function GalleryScreen() {
   const { categories, photos, loading, getLatestPhotoForCategory, deleteCategory } = usePhotosContext();
   const { colors } = useTheme();
+  const [modal, setModal] = useState<ModalConfig | null>(null);
 
   function renderCategory({ item, index }: { item: Category; index: number }) {
     const latestPhoto = getLatestPhotoForCategory(item.id);
@@ -165,14 +166,14 @@ export default function GalleryScreen() {
       : null;
 
     function handleLongPress() {
-      Alert.alert(
-        'Delete Category',
-        `Delete "${item.name}" and all its photos? This cannot be undone.`,
-        [
+      setModal({
+        title: 'Delete Category',
+        message: `Delete "${item.name}" and all its photos? This cannot be undone.`,
+        buttons: [
           { text: 'Cancel', style: 'cancel' },
           { text: 'Delete', style: 'destructive', onPress: () => deleteCategory(item.id) },
         ],
-      );
+      });
     }
 
     return (
@@ -244,6 +245,11 @@ export default function GalleryScreen() {
           />
         )}
       </SafeAreaView>
+      <AppModal
+        visible={!!modal}
+        {...(modal ?? { title: '' })}
+        onDismiss={() => setModal(null)}
+      />
     </TabScreenWrapper>
   );
 }
