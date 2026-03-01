@@ -141,8 +141,8 @@ export default function GalleryScreen() {
 
     function handleLongPress() {
       setModal({
-        title: 'Delete Category',
-        message: `Delete "${item.name}" and all its photos? This cannot be undone.`,
+        title: 'Remove Category',
+        message: `Remove "${item.name}"? Photos won't be deleted, just untracked.`,
         buttons: [
           { text: 'Cancel', style: 'cancel' },
           { text: 'Delete', style: 'destructive', onPress: () => deleteCategory(item.id) },

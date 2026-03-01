@@ -43,8 +43,8 @@ export default function CategoryScreen() {
 
   function handleDeleteCategory() {
     setModal({
-      title: 'Delete Category',
-      message: `Delete "${category?.name}" and all its photos? This cannot be undone.`,
+      title: 'Remove Category',
+      message: `Remove "${category?.name}"? Photos won't be deleted, just untracked.`,
       buttons: [
         { text: 'Cancel', style: 'cancel' },
         {

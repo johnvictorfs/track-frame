@@ -133,8 +133,6 @@ export function PhotosProvider({ children }: { children: React.ReactNode }) {
   }, [photos]);
 
   const deleteCategory = useCallback(async (id: string) => {
-    const catPhotos = photos.filter((p) => p.categoryId === id);
-    await Promise.all(catPhotos.map((p) => FileSystem.deleteAsync(p.uri, { idempotent: true })));
     const updatedPhotos = photos.filter((p) => p.categoryId !== id);
     setPhotos(updatedPhotos);
     await AsyncStorage.setItem(PHOTOS_KEY, JSON.stringify(updatedPhotos));
