@@ -1,5 +1,5 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemePreference, useSettings } from '@/context/settings-context';
@@ -65,6 +65,20 @@ export default function SettingsScreen() {
           </View>
         </View>
       </View>
+
+      <View style={[styles.section, { marginTop: 24 }]}>
+        <Text style={[styles.sectionLabel, { color: colors.subtext }]}>ABOUT</Text>
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Pressable
+            style={({ pressed }) => [styles.linkRow, { opacity: pressed ? 0.6 : 1 }]}
+            onPress={() => Linking.openURL('https://github.com/johnvictorfs/track-frame/')}
+          >
+            <MaterialIcons name="code" size={20} color={colors.tint} />
+            <Text style={[styles.linkText, { color: colors.tint }]}>Source Code</Text>
+            <MaterialIcons name="open-in-new" size={16} color={colors.subtext} style={{ marginLeft: 'auto' }} />
+          </Pressable>
+        </View>
+      </View>
     </SafeAreaView>
   );
 }
@@ -121,6 +135,16 @@ const styles = StyleSheet.create({
   },
   optionLabel: {
     fontSize: 13,
+    fontWeight: '500',
+  },
+  linkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 4,
+  },
+  linkText: {
+    fontSize: 15,
     fontWeight: '500',
   },
 });
