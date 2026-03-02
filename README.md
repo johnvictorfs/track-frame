@@ -15,13 +15,13 @@ TrackFrame lets you create categories and add photos to them over time, so you c
 
 ## Features
 
-- Take photos with your camera or import from your photo library
-- Organize photos into named, color-coded categories
-- See all categories at a glance with latest photo preview and count
-- Browse a chronological photo grid per category
-- Long-press a photo to delete it
-- Add more photos to any category at any time
-- Dark mode support
+- Shoot or import photos, including multiple at once
+- Organize into named, color-coded categories
+- Gallery overview with latest photo preview per category
+- Sort photos newest or oldest first; batch select to share
+- Auto-detects photo date from metadata, with a manual picker as fallback
+- Light, dark, or system theme
+- All photos stored locally — never uploaded anywhere
 
 ## Getting Started
 
@@ -36,19 +36,6 @@ TrackFrame lets you create categories and add photos to them over time, so you c
    ```
 
    Then open in the [Expo Go](https://expo.dev/go) app, an Android emulator, or iOS simulator.
-
-## Project Structure
-
-```
-app/
-  (tabs)/
-    index.tsx       # Gallery — categories list
-    add.tsx         # Add Photo — pick/shoot and categorize
-  category/
-    [id].tsx        # Category detail — chronological photo grid
-context/
-  photos-context.tsx  # Shared state: categories and photos
-```
 
 ## Tech Stack
 
