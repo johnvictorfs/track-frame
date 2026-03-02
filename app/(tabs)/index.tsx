@@ -132,11 +132,17 @@ export default function GalleryScreen() {
     const latestPhoto = getLatestPhotoForCategory(item.id);
     const photoCount = photos.filter((p) => p.categoryId === item.id).length;
     const lastDate = latestPhoto
-      ? new Date(latestPhoto.takenAt).toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric',
-        })
+      ? (() => {
+          const days = Math.floor((Date.now() - new Date(latestPhoto.takenAt).getTime()) / 86_400_000);
+          if (days === 0) return 'today';
+          if (days === 1) return 'yesterday';
+          if (days < 30) return `${days} days ago`;
+          return new Date(latestPhoto.takenAt).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+          });
+        })()
       : null;
 
     function handleLongPress() {
