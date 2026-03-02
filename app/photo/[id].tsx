@@ -43,12 +43,21 @@ export default function PhotoScreen() {
 
   const initialIndex = Math.max(0, categoryPhotos.findIndex((p) => p.id === id));
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const [compareMode, setCompareMode] = useState(false);
   const [listHeight, setListHeight] = useState(0);
   const [modal, setModal] = useState<ModalConfig | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const flatListRef = useRef<FlatList>(null);
 
   const currentPhoto = categoryPhotos[currentIndex] ?? categoryPhotos[0];
+
+  function formatShortDate(iso: string) {
+    return new Date(iso).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  }
 
   function formatDate(iso: string) {
     return new Date(iso).toLocaleDateString('en-US', {
@@ -71,7 +80,9 @@ export default function PhotoScreen() {
   const onViewableItemsChanged = useCallback(
     ({ viewableItems }: { viewableItems: ViewToken[] }) => {
       if (viewableItems.length > 0 && viewableItems[0].index != null) {
-        setCurrentIndex(viewableItems[0].index);
+        const idx = viewableItems[0].index;
+        setCurrentIndex(idx);
+        if (idx === 0) setCompareMode(false);
       }
     },
     []
@@ -164,6 +175,25 @@ export default function PhotoScreen() {
             )}
           />
         )}
+        {listHeight > 0 && compareMode && currentIndex > 0 && (
+          <View style={[StyleSheet.absoluteFillObject, styles.compareContainer]}>
+            <View style={styles.compareSide}>
+              <Image source={{ uri: categoryPhotos[0].uri }} style={{ flex: 1 }} contentFit="contain" />
+              <View style={styles.compareLabel}>
+                <Text style={styles.compareLabelDay}>Day 1 · Start</Text>
+                <Text style={styles.compareLabelDate}>{formatShortDate(categoryPhotos[0].takenAt)}</Text>
+              </View>
+            </View>
+            <View style={styles.compareDivider} />
+            <View style={styles.compareSide}>
+              <Image source={{ uri: currentPhoto.uri }} style={{ flex: 1 }} contentFit="contain" />
+              <View style={styles.compareLabel}>
+                <Text style={styles.compareLabelDay}>{getDayLabel(currentPhoto.takenAt, currentIndex)}</Text>
+                <Text style={styles.compareLabelDate}>{formatShortDate(currentPhoto.takenAt)}</Text>
+              </View>
+            </View>
+          </View>
+        )}
       </View>
 
       <View style={styles.footer}>
@@ -191,19 +221,31 @@ export default function PhotoScreen() {
             </Pressable>
           </View>
         )}
-        <View style={styles.actionRow}>
-          <Pressable style={styles.actionBtn} onPress={handleShare}>
-            <MaterialIcons name="share" size={20} color="#fff" />
-            <Text style={styles.actionBtnText}>Share</Text>
-          </Pressable>
-          <Pressable style={styles.actionBtn} onPress={() => setShowDatePicker(true)}>
-            <MaterialIcons name="edit-calendar" size={20} color="#fff" />
-            <Text style={styles.actionBtnText}>Edit Date</Text>
-          </Pressable>
-          <Pressable style={[styles.actionBtn, styles.removeBtnColor]} onPress={handleRemove}>
-            <MaterialIcons name="remove-circle-outline" size={20} color="#ff4444" />
-            <Text style={[styles.actionBtnText, { color: '#ff4444' }]}>Remove</Text>
-          </Pressable>
+        <View style={styles.actionRows}>
+          <View style={styles.actionRow}>
+            <Pressable style={styles.actionBtn} onPress={handleShare}>
+              <MaterialIcons name="share" size={20} color="#fff" />
+              <Text style={styles.actionBtnText}>Share</Text>
+            </Pressable>
+            <Pressable
+              style={[styles.actionBtn, compareMode && styles.actionBtnActive, currentIndex === 0 && styles.actionBtnDisabled]}
+              onPress={() => setCompareMode((v) => !v)}
+              disabled={currentIndex === 0}
+            >
+              <MaterialIcons name="compare" size={20} color={compareMode ? '#a78bfa' : '#fff'} />
+              <Text style={[styles.actionBtnText, compareMode && { color: '#a78bfa' }]}>Compare</Text>
+            </Pressable>
+          </View>
+          <View style={styles.actionRow}>
+            <Pressable style={styles.actionBtn} onPress={() => setShowDatePicker(true)}>
+              <MaterialIcons name="edit-calendar" size={20} color="#fff" />
+              <Text style={styles.actionBtnText}>Edit Date</Text>
+            </Pressable>
+            <Pressable style={styles.actionBtn} onPress={handleRemove}>
+              <MaterialIcons name="remove-circle-outline" size={20} color="#ff4444" />
+              <Text style={[styles.actionBtnText, { color: '#ff4444' }]}>Remove</Text>
+            </Pressable>
+          </View>
         </View>
       </View>
       <AppModal
@@ -247,10 +289,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: 'rgba(255,255,255,0.5)',
   },
+  actionRows: {
+    alignSelf: 'stretch',
+    gap: 8,
+    marginTop: 10,
+  },
   actionRow: {
     flexDirection: 'row',
-    gap: 10,
-    marginTop: 10,
+    gap: 8,
   },
   actionBtn: {
     flex: 1,
@@ -258,7 +304,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    paddingVertical: 12,
+    paddingVertical: 13,
     paddingHorizontal: 10,
     borderRadius: 12,
     backgroundColor: '#1a1a1a',
@@ -268,8 +314,45 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
   },
-  removeBtnColor: {
-    // inherits actionBtn background
+  actionBtnActive: {
+    backgroundColor: '#1a0030',
+  },
+  actionBtnDisabled: {
+    opacity: 0.35,
+  },
+  compareContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#000',
+  },
+  compareSide: {
+    flex: 1,
+  },
+  compareDivider: {
+    width: 1,
+    backgroundColor: '#444',
+  },
+  compareLabel: {
+    position: 'absolute',
+    bottom: 8,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    paddingHorizontal: 4,
+  },
+  compareLabelDay: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: '600',
+    textShadowColor: 'rgba(0,0,0,0.9)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
+  compareLabelDate: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 10,
+    textShadowColor: 'rgba(0,0,0,0.9)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
   navRow: {
     flexDirection: 'row',
