@@ -15,6 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import AppModal, { ModalConfig } from '@/components/AppModal';
+import DatePickerModal from '@/components/DatePickerModal';
 import { usePhotosContext } from '@/context/photos-context';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -33,7 +34,7 @@ export default function PhotoScreen() {
   if (paramCategoryId) catIdRef.current = paramCategoryId;
   const categoryId = catIdRef.current;
 
-  const { photos, getPhotosByCategory, deletePhoto } = usePhotosContext();
+  const { photos, getPhotosByCategory, deletePhoto, updatePhoto } = usePhotosContext();
 
   const rawPhotos = categoryId ? getPhotosByCategory(categoryId) : photos.filter((p) => p.id === id);
   const categoryPhotos = [...rawPhotos].sort(
@@ -44,6 +45,7 @@ export default function PhotoScreen() {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [listHeight, setListHeight] = useState(0);
   const [modal, setModal] = useState<ModalConfig | null>(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const flatListRef = useRef<FlatList>(null);
 
   const currentPhoto = categoryPhotos[currentIndex] ?? categoryPhotos[0];
@@ -190,13 +192,17 @@ export default function PhotoScreen() {
           </View>
         )}
         <View style={styles.actionRow}>
-          <Pressable style={styles.shareBtn} onPress={handleShare}>
-            <MaterialIcons name="share" size={22} color="#fff" />
-            <Text style={styles.shareBtnText}>Share</Text>
+          <Pressable style={styles.actionBtn} onPress={handleShare}>
+            <MaterialIcons name="share" size={20} color="#fff" />
+            <Text style={styles.actionBtnText}>Share</Text>
           </Pressable>
-          <Pressable style={styles.removeBtn} onPress={handleRemove}>
-            <MaterialIcons name="remove-circle-outline" size={22} color="#ff4444" />
-            <Text style={styles.removeBtnText}>Remove</Text>
+          <Pressable style={styles.actionBtn} onPress={() => setShowDatePicker(true)}>
+            <MaterialIcons name="edit-calendar" size={20} color="#fff" />
+            <Text style={styles.actionBtnText}>Edit Date</Text>
+          </Pressable>
+          <Pressable style={[styles.actionBtn, styles.removeBtnColor]} onPress={handleRemove}>
+            <MaterialIcons name="remove-circle-outline" size={20} color="#ff4444" />
+            <Text style={[styles.actionBtnText, { color: '#ff4444' }]}>Remove</Text>
           </Pressable>
         </View>
       </View>
@@ -205,6 +211,17 @@ export default function PhotoScreen() {
         {...(modal ?? { title: '' })}
         onDismiss={() => setModal(null)}
       />
+      {currentPhoto && (
+        <DatePickerModal
+          visible={showDatePicker}
+          date={new Date(currentPhoto.takenAt)}
+          onConfirm={async (d) => {
+            await updatePhoto(currentPhoto.id, { takenAt: d.toISOString() });
+            setShowDatePicker(false);
+          }}
+          onDismiss={() => setShowDatePicker(false)}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -235,37 +252,24 @@ const styles = StyleSheet.create({
     gap: 10,
     marginTop: 10,
   },
-  shareBtn: {
+  actionBtn: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: 6,
     paddingVertical: 12,
-    paddingHorizontal: 20,
+    paddingHorizontal: 10,
     borderRadius: 12,
     backgroundColor: '#1a1a1a',
   },
-  shareBtnText: {
+  actionBtnText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '500',
   },
-  removeBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-    backgroundColor: '#1a1a1a',
-  },
-  removeBtnText: {
-    color: '#ff4444',
-    fontSize: 16,
-    fontWeight: '500',
+  removeBtnColor: {
+    // inherits actionBtn background
   },
   navRow: {
     flexDirection: 'row',

@@ -7,6 +7,7 @@ import {
   Alert,
   Dimensions,
   FlatList,
+  InteractionManager,
   Platform,
   Pressable,
   StyleSheet,
@@ -16,6 +17,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import AppModal, { ModalConfig } from '@/components/AppModal';
+import DatePickerModal from '@/components/DatePickerModal';
 import { usePhotosContext } from '@/context/photos-context';
 import { useSettings } from '@/context/settings-context';
 import { useTheme } from '@/hooks/use-theme';
@@ -36,6 +38,8 @@ export default function CategoryScreen() {
   const { sortOrder, setSortOrder } = useSettings();
   const insets = useSafeAreaInsets();
   const [modal, setModal] = useState<ModalConfig | null>(null);
+  const [pendingAssets, setPendingAssets] = useState<{ uri: string; takenAt?: string }[]>([]);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isSharing, setIsSharing] = useState(false);
@@ -134,6 +138,22 @@ export default function CategoryScreen() {
     return isNaN(d.getTime()) ? undefined : d.toISOString();
   }
 
+  async function saveAssets(assets: { uri: string; takenAt?: string }[], date: Date) {
+    const mapped = assets.map((a) => ({ uri: a.uri, takenAt: a.takenAt ?? date.toISOString() }));
+    await addPhotos(mapped, id);
+  }
+
+  async function handlePicked(assets: { uri: string; takenAt?: string }[]) {
+    if (assets.some((a) => !a.takenAt)) {
+      setPendingAssets(assets);
+      // Wait for the image picker's native dismiss animation to fully complete
+      // before presenting the date picker modal, otherwise iOS silently drops it.
+      InteractionManager.runAfterInteractions(() => setShowDatePicker(true));
+    } else {
+      await saveAssets(assets, new Date());
+    }
+  }
+
   async function handleAddPhoto() {
     setModal({
       title: 'Add Photo',
@@ -149,7 +169,7 @@ export default function CategoryScreen() {
             const result = await ImagePicker.launchCameraAsync({ mediaTypes: 'images', quality: 0.9, exif: true });
             if (!result.canceled) {
               const a = result.assets[0];
-              await addPhoto(a.uri, id, parseExifDate(a.exif?.DateTimeOriginal ?? a.exif?.DateTime));
+              await handlePicked([{ uri: a.uri, takenAt: parseExifDate(a.exif?.DateTimeOriginal) }]);
             }
           },
         },
@@ -184,12 +204,11 @@ export default function CategoryScreen() {
               }
             }
             if (!result.canceled) {
-              await addPhotos(
+              await handlePicked(
                 result.assets.map((a) => ({
                   uri: a.uri,
-                  takenAt: parseExifDate(a.exif?.DateTimeOriginal ?? a.exif?.DateTime),
+                  takenAt: parseExifDate(a.exif?.DateTimeOriginal),
                 })),
-                id,
               );
             }
           },
@@ -360,6 +379,19 @@ export default function CategoryScreen() {
         visible={!!modal}
         {...(modal ?? { title: '' })}
         onDismiss={() => setModal(null)}
+      />
+      <DatePickerModal
+        visible={showDatePicker}
+        date={new Date()}
+        onConfirm={async (d) => {
+          setShowDatePicker(false);
+          await saveAssets(pendingAssets, d);
+          setPendingAssets([]);
+        }}
+        onDismiss={() => {
+          setShowDatePicker(false);
+          setPendingAssets([]);
+        }}
       />
     </SafeAreaView>
   );

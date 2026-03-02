@@ -19,6 +19,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import AppModal, { ModalConfig } from '@/components/AppModal';
+import DatePickerModal from '@/components/DatePickerModal';
 import { CATEGORY_SUGGESTIONS } from '@/constants/category-suggestions';
 import { usePhotosContext } from '@/context/photos-context';
 import { useTheme } from '@/hooks/use-theme';
@@ -44,6 +45,8 @@ export default function AddScreen() {
   const [newCategoryName, setNewCategoryName] = useState('');
   const [saving, setSaving] = useState(false);
   const [modal, setModal] = useState<ModalConfig | null>(null);
+  const [manualDate, setManualDate] = useState<Date>(() => new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   useEffect(() => {
     if (preselectedCategoryId) {
@@ -63,7 +66,7 @@ export default function AddScreen() {
       const a = result.assets[0];
       setSelectedAssets((prev) => [
         ...prev,
-        { uri: a.uri, takenAt: parseExifDate(a.exif?.DateTimeOriginal ?? a.exif?.DateTime) },
+        { uri: a.uri, takenAt: parseExifDate(a.exif?.DateTimeOriginal) },
       ]);
     }
   }
@@ -99,7 +102,7 @@ export default function AddScreen() {
     if (!result.canceled) {
       const assets = result.assets.map((a) => ({
         uri: a.uri,
-        takenAt: parseExifDate(a.exif?.DateTimeOriginal ?? a.exif?.DateTime),
+        takenAt: parseExifDate(a.exif?.DateTimeOriginal),
       }));
       setSelectedAssets((prev) => [...prev, ...assets]);
     }
@@ -123,7 +126,13 @@ export default function AddScreen() {
         setSaving(false);
         return;
       }
-      await addPhotos(selectedAssets, categoryId);
+      await addPhotos(
+        selectedAssets.map((a) => ({
+          uri: a.uri,
+          takenAt: a.takenAt ?? manualDate.toISOString(),
+        })),
+        categoryId,
+      );
       reset();
       router.push(`/category/${categoryId}`);
     } catch {
@@ -138,6 +147,11 @@ export default function AddScreen() {
     setSelectedCategoryId(null);
     setShowNewCategory(false);
     setNewCategoryName('');
+    setManualDate(new Date());
+  }
+
+  function formatDateDisplay(d: Date) {
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   }
 
   const hasCategory =
@@ -145,6 +159,8 @@ export default function AddScreen() {
 
   const canSave = selectedAssets.length > 0 && hasCategory;
   const photoCount = selectedAssets.length;
+  const hasUnknownDates = selectedAssets.some((a) => !a.takenAt);
+  const unknownCount = selectedAssets.filter((a) => !a.takenAt).length;
 
   return (
     <TabScreenWrapper>
@@ -307,6 +323,33 @@ export default function AddScreen() {
               </View>
             )}
 
+            {/* ── Date (for photos without EXIF) ── */}
+            {selectedAssets.length > 0 && hasUnknownDates && (
+              <Animated.View entering={FadeIn.duration(300)}>
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>Date</Text>
+                <View style={{ marginHorizontal: 16, gap: 8 }}>
+                  <Text style={[styles.dateHint, { color: colors.subtext }]}>
+                    {unknownCount === photoCount
+                      ? 'No date found in photo metadata'
+                      : `${unknownCount} photo${unknownCount !== 1 ? 's' : ''} missing date metadata`}
+                  </Text>
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.datePill,
+                      { backgroundColor: colors.card, borderColor: colors.border, opacity: pressed ? 0.7 : 1 },
+                    ]}
+                    onPress={() => setShowDatePicker(true)}
+                  >
+                    <MaterialIcons name="event" size={18} color={colors.tint} />
+                    <Text style={[styles.datePillText, { color: colors.text }]}>
+                      {formatDateDisplay(manualDate)}
+                    </Text>
+                    <MaterialIcons name="chevron-right" size={18} color={colors.subtext} style={{ marginLeft: 'auto' }} />
+                  </Pressable>
+                </View>
+              </Animated.View>
+            )}
+
             {/* ── Save ── */}
             {selectedAssets.length > 0 && !hasCategory && (
               <Animated.View entering={FadeIn.duration(300)} style={[styles.hint, { backgroundColor: colors.tintSubtle }]}>
@@ -346,6 +389,12 @@ export default function AddScreen() {
         visible={!!modal}
         {...(modal ?? { title: '' })}
         onDismiss={() => setModal(null)}
+      />
+      <DatePickerModal
+        visible={showDatePicker}
+        date={manualDate}
+        onConfirm={(d) => { setManualDate(d); setShowDatePicker(false); }}
+        onDismiss={() => setShowDatePicker(false)}
       />
     </TabScreenWrapper>
   );
@@ -524,6 +573,23 @@ const styles = StyleSheet.create({
   },
   hintText: {
     fontSize: 13,
+    fontWeight: '500',
+  },
+  dateHint: {
+    fontSize: 13,
+    marginBottom: 2,
+  },
+  datePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  datePillText: {
+    fontSize: 15,
     fontWeight: '500',
   },
   privacyNotice: {
