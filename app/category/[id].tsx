@@ -50,6 +50,9 @@ export default function CategoryScreen() {
     const diff = new Date(b.takenAt).getTime() - new Date(a.takenAt).getTime();
     return sortOrder === 'newest' ? diff : -diff;
   });
+  const earliestTakenAt = rawPhotos.length
+    ? Math.min(...rawPhotos.map((p) => new Date(p.takenAt).getTime()))
+    : null;
 
   function handleDeleteCategory() {
     setModal({
@@ -357,6 +360,11 @@ export default function CategoryScreen() {
                   <Text style={[styles.photoDate, { color: colors.subtext }]}>
                     {formatDate(item.takenAt)}
                   </Text>
+                  {earliestTakenAt !== null && (
+                    <Text style={[styles.photoDay, { color: colors.subtext }]}>
+                      Day {Math.floor((new Date(item.takenAt).getTime() - earliestTakenAt) / 86_400_000) + 1}
+                    </Text>
+                  )}
                 </Pressable>
               </View>
             );
@@ -429,6 +437,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: 'center',
     marginTop: 5,
+  },
+  photoDay: {
+    fontSize: 11,
+    textAlign: 'center',
+    marginTop: 2,
   },
   sortBar: {
     flexDirection: 'row',
