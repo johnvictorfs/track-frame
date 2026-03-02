@@ -17,6 +17,9 @@ export default function TabLayout() {
           backgroundColor: colors.tabBar,
           borderTopColor: colors.border,
         },
+        tabBarIconStyle: {
+          transform: [{ translateY: -3 }],
+        },
         headerShown: false,
         tabBarButton: HapticTab,
       }}
