@@ -58,7 +58,7 @@ export default function CategoryScreen() {
       buttons: [
         { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Delete',
+          text: 'Remove',
           style: 'destructive',
           onPress: async () => {
             await deleteCategory(id);
@@ -120,7 +120,7 @@ export default function CategoryScreen() {
       buttons: [
         { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Delete',
+          text: 'Remove',
           style: 'destructive',
           onPress: async () => {
             await deletePhotos(Array.from(selectedIds));

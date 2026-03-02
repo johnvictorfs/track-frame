@@ -145,7 +145,7 @@ export default function GalleryScreen() {
         message: `Remove "${item.name}"? Photos won't be deleted, just untracked.`,
         buttons: [
           { text: 'Cancel', style: 'cancel' },
-          { text: 'Delete', style: 'destructive', onPress: () => deleteCategory(item.id) },
+          { text: 'Remove', style: 'destructive', onPress: () => deleteCategory(item.id) },
         ],
       });
     }
