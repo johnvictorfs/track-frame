@@ -32,7 +32,7 @@ TrackFrame lets you create categories and add photos to them over time, so you c
 
 2. Start the app:
    ```bash
-   npx expo start
+   npm start
    ```
 
    Then open in the [Expo Go](https://expo.dev/go) app, an Android emulator, or iOS simulator.
