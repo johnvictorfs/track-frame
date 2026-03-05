@@ -17,6 +17,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AppModal, { ModalConfig } from '@/components/AppModal';
 import DatePickerModal from '@/components/DatePickerModal';
 import { usePhotosContext } from '@/context/photos-context';
+import { calendarDayNumber } from '@/utils/day-number';
+import { formatShortDate } from '@/utils/format-date';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
@@ -51,14 +53,6 @@ export default function PhotoScreen() {
 
   const currentPhoto = categoryPhotos[currentIndex] ?? categoryPhotos[0];
 
-  function formatShortDate(iso: string) {
-    return new Date(iso).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-  }
-
   function formatDate(iso: string) {
     return new Date(iso).toLocaleDateString('en-US', {
       weekday: 'long',
@@ -70,10 +64,7 @@ export default function PhotoScreen() {
 
   function getDayLabel(iso: string, index: number): string {
     if (index === 0) return 'Day 1 · Start';
-    const start = new Date(categoryPhotos[0].takenAt);
-    const current = new Date(iso);
-    const days = Math.round((current.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-    return `Day ${days + 1}`;
+    return `Day ${calendarDayNumber(categoryPhotos[0].takenAt, iso)}`;
   }
 
   const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 50 });

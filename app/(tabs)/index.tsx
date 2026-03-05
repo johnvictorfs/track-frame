@@ -20,6 +20,7 @@ import AppModal, { ModalConfig } from '@/components/AppModal';
 import { CATEGORY_SUGGESTIONS } from '@/constants/category-suggestions';
 import { Category, usePhotosContext } from '@/context/photos-context';
 import { useTheme } from '@/hooks/use-theme';
+import { formatShortDate } from '@/utils/format-date';
 import Onboarding from '@/components/Onboarding';
 
 function NewCategoryFooter() {
@@ -137,11 +138,7 @@ export default function GalleryScreen() {
           if (days === 0) return 'today';
           if (days === 1) return 'yesterday';
           if (days < 30) return `${days} days ago`;
-          return new Date(latestPhoto.takenAt).toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric',
-          });
+          return formatShortDate(latestPhoto.takenAt);
         })()
       : null;
 

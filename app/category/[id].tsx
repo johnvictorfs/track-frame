@@ -21,6 +21,8 @@ import DatePickerModal from '@/components/DatePickerModal';
 import { usePhotosContext } from '@/context/photos-context';
 import { useSettings } from '@/context/settings-context';
 import { useTheme } from '@/hooks/use-theme';
+import { calendarDayNumber } from '@/utils/day-number';
+import { formatShortDate } from '@/utils/format-date';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const PHOTO_SIZE = (SCREEN_WIDTH - 48) / 2;
@@ -225,12 +227,9 @@ export default function CategoryScreen() {
     setSortOrder(sortOrder === 'newest' ? 'oldest' : 'newest');
   }, [sortOrder, setSortOrder]);
 
-  function formatDate(iso: string) {
-    return new Date(iso).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
+  function dayNumber(takenAt: string): number {
+    if (earliestTakenAt === null) return 1;
+    return calendarDayNumber(new Date(earliestTakenAt).toISOString(), takenAt);
   }
 
   if (!category) {
@@ -358,11 +357,11 @@ export default function CategoryScreen() {
                     </View>
                   )}
                   <Text style={[styles.photoDate, { color: colors.subtext }]}>
-                    {formatDate(item.takenAt)}
+                    {formatShortDate(item.takenAt)}
                   </Text>
                   {earliestTakenAt !== null && (
                     <Text style={[styles.photoDay, { color: colors.subtext }]}>
-                      Day {Math.floor((new Date(item.takenAt).getTime() - earliestTakenAt) / 86_400_000) + 1}
+                      Day {dayNumber(item.takenAt)}
                     </Text>
                   )}
                 </Pressable>
