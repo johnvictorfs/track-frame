@@ -1,6 +1,11 @@
 # TrackFrame
 
-A React Native (Expo) app for tracking visual progress over time with photos.
+A React Native (Expo) app for tracking visual progress over time with photos. Only supporting Android for now.
+
+
+|  |  |  |
+|--------|--------|--------|
+| <img width="430" height="881" alt="image" src="https://github.com/user-attachments/assets/5f1f56ee-5954-474a-8c91-1997286e3c7d" /> | <img width="432" height="894" alt="image" src="https://github.com/user-attachments/assets/276ce897-23ff-418c-a2af-1caaeecbc39d" /> | <img width="424" height="880" alt="image" src="https://github.com/user-attachments/assets/fa7470a5-cc84-45d3-9f02-8dfa52433f58" /> | 
 
 ## What is it?
 
