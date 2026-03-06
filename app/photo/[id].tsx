@@ -46,10 +46,15 @@ export default function PhotoScreen() {
   const initialIndex = Math.max(0, categoryPhotos.findIndex((p) => p.id === id));
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [compareMode, setCompareMode] = useState(false);
+  const [compareLeftIndex, setCompareLeftIndex] = useState(0);
+  const [compareRightIndex, setCompareRightIndex] = useState(initialIndex);
   const [listHeight, setListHeight] = useState(0);
   const [modal, setModal] = useState<ModalConfig | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const flatListRef = useRef<FlatList>(null);
+  const compareLeftFlatRef = useRef<FlatList>(null);
+  const compareRightFlatRef = useRef<FlatList>(null);
+  const compareViewabilityConfig = useRef({ itemVisiblePercentThreshold: 50 });
 
   const currentPhoto = categoryPhotos[currentIndex] ?? categoryPhotos[0];
 
@@ -71,13 +76,37 @@ export default function PhotoScreen() {
   const onViewableItemsChanged = useCallback(
     ({ viewableItems }: { viewableItems: ViewToken[] }) => {
       if (viewableItems.length > 0 && viewableItems[0].index != null) {
-        const idx = viewableItems[0].index;
-        setCurrentIndex(idx);
-        if (idx === 0) setCompareMode(false);
+        setCurrentIndex(viewableItems[0].index);
       }
     },
     []
   );
+
+  const onLeftViewableItemsChanged = useCallback(
+    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
+      if (viewableItems.length > 0 && viewableItems[0].index != null) {
+        setCompareLeftIndex(viewableItems[0].index);
+      }
+    },
+    []
+  );
+
+  const onRightViewableItemsChanged = useCallback(
+    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
+      if (viewableItems.length > 0 && viewableItems[0].index != null) {
+        setCompareRightIndex(viewableItems[0].index);
+      }
+    },
+    []
+  );
+
+  function toggleCompareMode() {
+    if (!compareMode) {
+      setCompareLeftIndex(0);
+      setCompareRightIndex(currentIndex);
+    }
+    setCompareMode((v) => !v);
+  }
 
   async function handleShare() {
     if (!currentPhoto) return;
@@ -166,21 +195,79 @@ export default function PhotoScreen() {
             )}
           />
         )}
-        {listHeight > 0 && compareMode && currentIndex > 0 && (
+        {listHeight > 0 && compareMode && (
           <View style={[StyleSheet.absoluteFillObject, styles.compareContainer]}>
             <View style={styles.compareSide}>
-              <Image source={{ uri: categoryPhotos[0].uri }} style={{ flex: 1 }} contentFit="contain" />
+              <FlatList
+                ref={compareLeftFlatRef}
+                data={categoryPhotos}
+                keyExtractor={(p) => p.id}
+                pagingEnabled
+                showsVerticalScrollIndicator={false}
+                initialScrollIndex={compareLeftIndex}
+                getItemLayout={(_, index) => ({
+                  length: listHeight,
+                  offset: listHeight * index,
+                  index,
+                })}
+                onViewableItemsChanged={onLeftViewableItemsChanged}
+                viewabilityConfig={compareViewabilityConfig.current}
+                renderItem={({ item }) => (
+                  <View style={{ width: SCREEN_WIDTH / 2, height: listHeight }}>
+                    <Image source={{ uri: item.uri }} style={{ flex: 1 }} contentFit="contain" />
+                  </View>
+                )}
+              />
+              {compareLeftIndex > 0 && (
+                <View style={[styles.compareScrollHint, styles.compareScrollHintTop]} pointerEvents="none">
+                  <MaterialIcons name="keyboard-arrow-up" size={18} color="rgba(255,255,255,0.6)" />
+                </View>
+              )}
+              {compareLeftIndex < categoryPhotos.length - 1 && (
+                <View style={[styles.compareScrollHint, styles.compareScrollHintBottom]} pointerEvents="none">
+                  <MaterialIcons name="keyboard-arrow-down" size={18} color="rgba(255,255,255,0.6)" />
+                </View>
+              )}
               <View style={styles.compareLabel}>
-                <Text style={styles.compareLabelDay}>Day 1 · Start</Text>
-                <Text style={styles.compareLabelDate}>{formatShortDate(categoryPhotos[0].takenAt)}</Text>
+                <Text style={styles.compareLabelDay}>{getDayLabel(categoryPhotos[compareLeftIndex]?.takenAt ?? '', compareLeftIndex)}</Text>
+                <Text style={styles.compareLabelDate}>{formatShortDate(categoryPhotos[compareLeftIndex]?.takenAt ?? '')}</Text>
               </View>
             </View>
             <View style={styles.compareDivider} />
             <View style={styles.compareSide}>
-              <Image source={{ uri: currentPhoto.uri }} style={{ flex: 1 }} contentFit="contain" />
+              <FlatList
+                ref={compareRightFlatRef}
+                data={categoryPhotos}
+                keyExtractor={(p) => p.id}
+                pagingEnabled
+                showsVerticalScrollIndicator={false}
+                initialScrollIndex={compareRightIndex}
+                getItemLayout={(_, index) => ({
+                  length: listHeight,
+                  offset: listHeight * index,
+                  index,
+                })}
+                onViewableItemsChanged={onRightViewableItemsChanged}
+                viewabilityConfig={compareViewabilityConfig.current}
+                renderItem={({ item }) => (
+                  <View style={{ width: SCREEN_WIDTH / 2, height: listHeight }}>
+                    <Image source={{ uri: item.uri }} style={{ flex: 1 }} contentFit="contain" />
+                  </View>
+                )}
+              />
+              {compareRightIndex > 0 && (
+                <View style={[styles.compareScrollHint, styles.compareScrollHintTop]} pointerEvents="none">
+                  <MaterialIcons name="keyboard-arrow-up" size={18} color="rgba(255,255,255,0.6)" />
+                </View>
+              )}
+              {compareRightIndex < categoryPhotos.length - 1 && (
+                <View style={[styles.compareScrollHint, styles.compareScrollHintBottom]} pointerEvents="none">
+                  <MaterialIcons name="keyboard-arrow-down" size={18} color="rgba(255,255,255,0.6)" />
+                </View>
+              )}
               <View style={styles.compareLabel}>
-                <Text style={styles.compareLabelDay}>{getDayLabel(currentPhoto.takenAt, currentIndex)}</Text>
-                <Text style={styles.compareLabelDate}>{formatShortDate(currentPhoto.takenAt)}</Text>
+                <Text style={styles.compareLabelDay}>{getDayLabel(categoryPhotos[compareRightIndex]?.takenAt ?? '', compareRightIndex)}</Text>
+                <Text style={styles.compareLabelDate}>{formatShortDate(categoryPhotos[compareRightIndex]?.takenAt ?? '')}</Text>
               </View>
             </View>
           </View>
@@ -219,9 +306,9 @@ export default function PhotoScreen() {
               <Text style={styles.actionBtnText}>Share</Text>
             </Pressable>
             <Pressable
-              style={[styles.actionBtn, compareMode && styles.actionBtnActive, currentIndex === 0 && styles.actionBtnDisabled]}
-              onPress={() => setCompareMode((v) => !v)}
-              disabled={currentIndex === 0}
+              style={[styles.actionBtn, compareMode && styles.actionBtnActive, categoryPhotos.length <= 1 && styles.actionBtnDisabled]}
+              onPress={toggleCompareMode}
+              disabled={categoryPhotos.length <= 1}
             >
               <MaterialIcons name="compare" size={20} color={compareMode ? '#a78bfa' : '#fff'} />
               <Text style={[styles.actionBtnText, compareMode && { color: '#a78bfa' }]}>Compare</Text>
@@ -321,6 +408,18 @@ const styles = StyleSheet.create({
   compareDivider: {
     width: 1,
     backgroundColor: '#444',
+  },
+  compareScrollHint: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+  },
+  compareScrollHintTop: {
+    top: 6,
+  },
+  compareScrollHintBottom: {
+    bottom: 42,
   },
   compareLabel: {
     position: 'absolute',
